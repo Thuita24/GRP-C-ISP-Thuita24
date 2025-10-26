@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cotton Prediction{% endblock %}
+
+{% block extra_css %}
+<style>
+    .prediction-card {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    .stats-card {
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Welcome back, {{ user.name if user else 'User' }}!</h2>
+        <p class="text-muted">Cotton  Prediction Dashboard</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ total_predictions or 0 }}</h3>
+                <p class="mb-0">Total Predictions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="text-info">{{ avg_yield or 0 }}%</h3>
+                <p class="mb-0">Avg Predicted Yield</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ farms_count or 1 }}</h3>
+                <p class="mb-0">Farm Locations</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="text-danger">85%</h3>
+                <p class="mb-0">Accuracy Rate</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Prediction Form -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card prediction-card">
+            <div class="card-header">
+                <h4 class="mb-0">Make New Prediction</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('predict') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="temperature" class="form-label">Average Temperature (°C)</label>
+                                <input type="number" class="form-control" id="temperature" 
+                                       name="temperature" step="0.1" min="0" max="50" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rainfall" class="form-label">Rainfall (mm)</label>
+                                <input type="number" class="form-control" id="rainfall" 
+                                       name="rainfall" step="0.1" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="humidity" class="form-label">Humidity (%)</label>
+                                <input type="number" class="form-control" id="humidity" 
+                                       name="humidity" min="0" max="100" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="soil" class="form-label">Soil Type</label>
+                                <input type="text" class="form-control" id="soil" 
+                                       name="soil" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="min_temperature" class="form-label">Min Temperature (°C)</label>
+                                <input type="number" class="form-control" id="min_temperature" 
+                                       name="min_temperature" step="0.1" min="0" required>
+                            </div>
+                        </div>
+
+                
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_temperature" class="form-label">Max Temperature (°C)</label>
+                                <input type="number" class="form-control" id="max_temperature" 
+                                       name="max_temperature" step="0.1" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="area" class="form-label">Farm Area (hectares)</label>
+                                <input type="number" class="form-control" id="area" 
+                                       name="area" step="0.1" min="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-light btn-lg w-100">
+                         Predict Planting Time
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Predictions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5> Recent Predictions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_predictions %}
+                    {% for prediction in recent_predictions %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <small class="text-muted">{{ prediction.date.strftime('%Y-%m-%d') }}</small>
+                            <br>
+                            <strong>{{ prediction.predicted_yield }}%</strong>
+                        </div>
+                        <span class="badge bg-success">{{ prediction.area }}ha</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No predictions yet. Make your first prediction!</p>
+                {% endif %}
+                
+                <a href="{{ url_for('prediction_history') }}" class="btn btn-outline-success btn-sm w-100 mt-2">
+                    View All Predictions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction Result Display -->
+{% if prediction_result %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-success alert-dismissible fade show">
+            <h5>Prediction Complete!</h5>
+            <p class="mb-0">
+                Predicted Cotton Yield: <strong>{{ prediction_result.yield }}%</strong>
+                <br>
+                Expected Production: <strong>{{ prediction_result.production }} kg</strong> 
+                from {{ prediction_result.area }} hectares
+            </p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

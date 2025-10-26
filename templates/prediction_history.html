@@ -1,0 +1,118 @@
+<!-- templates/prediction_history.html -->
+{% extends "base.html" %}
+
+{% block title %}Prediction History - Cotton Prediction{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>  Prediction History</h2>
+        <p class="text-muted">View all your cotton planting time predictions</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-success">← Back to Dashboard</a>
+    </div>
+</div>
+
+{% if predictions %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>All Predictions ({{ predictions|length }} total)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Predicted Yield</th>
+                                <th>Expected Production</th>
+                                <th>Area (ha)</th>
+                                <th>Temperature (°C)</th>
+                                <th>Rainfall (mm)</th>
+                                <th>Humidity (%)</th>
+                                <th>Soil </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prediction in predictions %}
+                            <tr>
+                                <td>{{ prediction.date[:10] }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ prediction.predicted_yield }}%</span>
+                                </td>
+                                <td>{{ prediction.expected_production }} kg</td>
+                                <td>{{ prediction.area }}</td>
+                                <td>{{ prediction.temperature }}</td>
+                                <td>{{ prediction.rainfall }}</td>
+                                <td>{{ prediction.humidity }}</td>
+                                <td>{{ prediction.soil }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-success">{{ predictions|length }}</h4>
+                <p class="mb-0">Total Predictions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-info">
+                    {% set avg_yield = predictions|map(attribute='predicted_yield')|list|sum / predictions|length %}
+                    {{ "%.1f"|format(avg_yield) }}%
+                </h4>
+                <p class="mb-0">Average Yield</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-warning">
+                    {% set total_area = predictions|map(attribute='area')|list|sum %}
+                    {{ "%.1f"|format(total_area) }} ha
+                </h4>
+                <p class="mb-0">Total Area</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-danger">
+                    {% set total_production = predictions|map(attribute='expected_production')|list|sum %}
+                    {{ "%.0f"|format(total_production) }} kg
+                </h4>
+                <p class="mb-0">Total Production</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h4>No Predictions Yet</h4>
+                <p class="text-muted">You haven't made any cotton yield predictions yet.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-success">Make Your First Prediction</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

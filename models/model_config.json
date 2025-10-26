@@ -1,0 +1,40 @@
+{
+  "model_version": "2.0",
+  "trained_date": "2025-10-26",
+  "training_samples": 5265,
+  "test_samples": 1317,
+  "features": [
+    "temp_c_mean",
+    "dewpoint_c_mean",
+    "precip_mm_mean",
+    "precip_mm_sum",
+    "ssrd_MJm2_mean",
+    "year_index",
+    "yield_lag1",
+    "season_Rabi"
+  ],
+  "feature_order": [
+    "temp_c_mean",
+    "dewpoint_c_mean",
+    "precip_mm_mean",
+    "precip_mm_sum",
+    "ssrd_MJm2_mean",
+    "year_index",
+    "yield_lag1",
+    "season_Rabi"
+  ],
+  "base_year": 2000,
+  "model_performance": {
+    "r2_score": 0.4652,
+    "rmse": 0.95,
+    "mae": 0.60,
+    "training_r2": 0.7048,
+    "training_rmse": 0.74
+  },
+  "data_coverage": {
+    "states": 28,
+    "districts": 455,
+    "years": "2001-2023"
+  },
+  "notes": "Version 2.0 - Trained with complete district data (6,582 rows). R² improved from 0.06 to 0.47 (+675%). Model is production-ready for farmer predictions."
+}

@@ -1,0 +1,30 @@
+{
+  "states": [
+    {
+      "name": "Andhra Pradesh",
+      "districts": ["Kadapa", "Guntur", "East godavari", "Anantapur", "Krishna"]
+    },
+    {
+      "name": "Assam",
+      "districts": ["Karimganj", "Kokrajhar", "Kamrup", "Jorhat", "Lakhimpur"]
+    },
+    {
+      "name": "Chhattisgarh",
+      "districts": ["Korea", "Kanker", "Kabirdham", "Dantewada", "Bilaspur"]
+    }
+
+  ],
+  "seasons": ["Kharif", "Rabi"],
+  "planting_windows": {
+    "Kharif": {
+      "early": {"start": "06-01", "end": "06-15", "label": "Early June"},
+      "mid": {"start": "06-16", "end": "06-30", "label": "Late June"},
+      "late": {"start": "07-01", "end": "07-15", "label": "Early July"}
+    },
+    "Rabi": {
+      "early": {"start": "10-01", "end": "10-15", "label": "Early October"},
+      "mid": {"start": "10-16", "end": "10-31", "label": "Late October"},
+      "late": {"start": "11-01", "end": "11-15", "label": "Early November"}
+    }
+  }
+}
