@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Optimal Planting Time Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2>🌾 Optimal Planting Time Analysis</h2>
+            <p class="text-muted">
+                Yield-Based Recommendations using Transfer Learning
+                {% if result.location and result.location != 'Unknown Location' %}
+                    <br><strong>📍 Location:</strong> {{ result.location }}
+                {% endif %}
+                {% if result.annual_rain %}
+                    <br><strong>🌧️ Annual Rainfall:</strong> {{ result.annual_rain }}mm
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Best Planting Months (Top 3) -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">🏆 Top 3 Recommended Planting Months</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for month in result.best_months %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 {% if loop.index == 1 %}border-success border-3{% else %}border-secondary{% endif %}">
+                        <div class="card-body text-center">
+                            <!-- Rank Badge -->
+                            <div class="mb-3">
+                                {% if loop.index == 1 %}
+                                    <span style="font-size: 3rem;">🥇</span>
+                                    <h5 class="text-success mt-2"><strong>BEST CHOICE</strong></h5>
+                                {% elif loop.index == 2 %}
+                                    <span style="font-size: 3rem;">🥈</span>
+                                    <h5 class="text-secondary mt-2">2nd Best</h5>
+                                {% else %}
+                                    <span style="font-size: 3rem;">🥉</span>
+                                    <h5 class="text-secondary mt-2">3rd Best</h5>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Month Name -->
+                            <h3 class="mb-3">{{ month.month }}</h3>
+                            
+                            <!-- Predicted Yield -->
+                            <div class="mb-3">
+                                <h2 class="{% if loop.index == 1 %}text-success{% else %}text-secondary{% endif %}">
+                                    {{ month.predicted_yield }}
+                                </h2>
+                                <p class="text-muted mb-0"><strong>bales/ha</strong></p>
+                                <small class="text-muted">Predicted Yield</small>
+                            </div>
+                            
+                            <!-- Season Badge -->
+                            <span class="badge 
+                                {% if month.season == 'Long Rains' %}bg-primary
+                                {% elif month.season == 'Short Rains' %}bg-info
+                                {% else %}bg-warning text-dark{% endif %} 
+                                px-3 py-2">
+                                {% if month.season == 'Long Rains' %}🌳
+                                {% elif month.season == 'Short Rains' %}🌱
+                                {% else %}☀️{% endif %}
+                                {{ month.season }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">💡 Recommendations</h4>
+        </div>
+        <div class="card-body">
+            {% for rec in result.recommendations %}
+            <div class="alert alert-{{ rec.type }} d-flex align-items-center" role="alert">
+                <span class="me-2" style="font-size: 1.5rem;">{{ rec.icon }}</span>
+                <div>{{ rec.text }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Monthly Yield Predictions Chart -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">📊 Predicted Yields by Planting Month</h4>
+            <small>Based on your location's climate characteristics (using transfer learning from Indian cotton data)</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Month</th>
+                            <th>Season</th>
+                            <th>Predicted Yield</th>
+                            <th>Yield Bar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month_data in result.monthly_predictions %}
+                        <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
+                            <td>
+                                {% if loop.index == 1 %}🥇
+                                {% elif loop.index == 2 %}🥈
+                                {% elif loop.index == 3 %}🥉
+                                {% else %}{{ loop.index }}{% endif %}
+                            </td>
+                            <td><strong>{{ month_data.month }}</strong></td>
+                            <td>
+                                <span class="badge 
+                                    {% if month_data.season == 'Long Rains' %}bg-primary
+                                    {% elif month_data.season == 'Short Rains' %}bg-info
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ month_data.season }}
+                                </span>
+                            </td>
+                            <td><strong>{{ month_data.predicted_yield }} bales/ha</strong></td>
+                            <td>
+                                {% set max_yield = result.monthly_predictions[0].predicted_yield %}
+                                {% set bar_width = (month_data.predicted_yield / max_yield * 100)|round %}
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar 
+                                        {% if loop.index == 1 %}bg-success
+                                        {% elif loop.index <= 3 %}bg-info
+                                        {% else %}bg-secondary{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ bar_width }}%;" 
+                                        aria-valuenow="{{ bar_width }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        {{ month_data.predicted_yield }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works (Transfer Learning Explanation) -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0">ℹ️ How This Works (Transfer Learning)</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>This prediction uses transfer learning:</strong></p>
+            <ol>
+                <li><strong>Trained on Indian data:</strong> Model learned cotton-climate-yield relationships from 542 Indian districts over 23 years</li>
+                <li><strong>Geographic-based features:</strong> Uses temperature, rainfall, soil, and irrigation (no location names) to make it universal</li>
+                <li><strong>Applied to Kenya:</strong> Simulates Kenya's bimodal rainfall pattern (Long rains: Mar-May, Short rains: Oct-Dec)</li>
+                <li><strong>Yield prediction per month:</strong> Predicts yield for each planting month and recommends the highest</li>
+            </ol>
+            <p class="mb-0"><em>This approach allows us to predict optimal planting times for Kenya without requiring extensive Kenyan historical data!</em></p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-2">
+            <a href="{{ url_for('geographic.optimal_planting_form') }}" class="btn btn-primary btn-lg w-100">
+                🔄 Try Another Location
+            </a>
+        </div>
+        <div class="col-md-6 mb-2">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg w-100">
+                🏠 Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.card {
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.progress {
+    border-radius: 5px;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.table-success {
+    background-color: #d1f4e0 !important;
+}
+</style>
+{% endblock %}

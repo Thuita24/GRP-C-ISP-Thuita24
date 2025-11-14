@@ -17,12 +17,18 @@ from google.auth.transport import requests as google_requests
 import pyotp
 import secrets
 from dotenv import load_dotenv
+from routes.prediction_routes import prediction_bp
+from routes.geographic_routes import geographic_bp
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'a1b2c3d4e5f6789012345abcdef67890123456789abcdef0123456789abcdef01'
+
+# Register blueprints   
+app.register_blueprint(prediction_bp)
+app.register_blueprint(geographic_bp)
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', 'your-google-client-id-here')
@@ -33,11 +39,13 @@ REDIRECT_URI = 'http://127.0.0.1:5000/auth/google/callback'
 DATABASE = 'cotton_app.db'
 
 def init_db():
-    """Initialize the database with users and predictions tables"""
+    """Initialize the database with all required tables"""
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
     
-    # Create users table with MFA and OAuth fields
+    # ========================================================================
+    # TABLE 1: USERS (with MFA and OAuth)
+    # ========================================================================
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +65,9 @@ def init_db():
         )
     ''')
     
-    # Create predictions table
+    # ========================================================================
+    # TABLE 2: PREDICTIONS (Old Model A - Keep for backward compatibility)
+    # ========================================================================
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS predictions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,8 +86,52 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+
+    # ========================================================================
+    # TABLE 3: GEOGRAPHIC PREDICTIONS (Model B - Main prediction table)
+    # ========================================================================
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS geographic_predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            temp_c REAL NOT NULL,
+            dewpoint_c REAL NOT NULL,
+            precip_mm REAL NOT NULL,
+            solar_rad REAL NOT NULL,
+            annual_rain REAL NOT NULL,
+            rain_cv REAL,
+            soil_type TEXT NOT NULL,
+            irrigation REAL NOT NULL,
+            prev_yield REAL,
+            predicted_yield REAL NOT NULL,
+            confidence_lower REAL NOT NULL,
+            confidence_upper REAL NOT NULL,
+            rainfall_zone TEXT NOT NULL,
+            location TEXT DEFAULT 'Unknown',
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
     
-    # Create MFA sessions table for temporary storage
+    # ========================================================================
+    # TABLE 4: PLANTING RECOMMENDATIONS (Optimal planting time)
+    # ========================================================================
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS planting_recommendations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            location TEXT NOT NULL,
+            annual_rain REAL NOT NULL,
+            best_month TEXT NOT NULL,
+            best_score REAL NOT NULL,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # ========================================================================
+    # TABLE 5: MFA SESSIONS (Two-factor authentication)
+    # ========================================================================
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS mfa_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,8 +142,19 @@ def init_db():
         )
     ''')
     
+    # ========================================================================
+    # INDEXES for better query performance
+    # ========================================================================
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_geographic_user ON geographic_predictions(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_geographic_date ON geographic_predictions(date)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_planting_user ON planting_recommendations(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_predictions_user ON predictions(user_id)')
+   
     conn.commit()
     conn.close()
+    
+    print("✅ Database initialized successfully!")
+
 
 def get_db_connection():
     """Get database connection"""
@@ -577,17 +642,58 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """User dashboard"""
+    """Dashboard with real-time statistics"""
     conn = get_db_connection()
-    user = conn.execute(
-        'SELECT name, email, location FROM users WHERE id = ?',
-        (session['user_id'],)
-    ).fetchone()
+    
+    # Get user info
+    user = conn.execute('SELECT * FROM users WHERE id = ?', 
+                       (session['user_id'],)).fetchone()
+    
+    # Get geographic predictions statistics
+    stats = conn.execute('''
+        SELECT 
+            COUNT(*) as total_predictions,
+            AVG(predicted_yield) as avg_yield,
+            MAX(predicted_yield) as max_yield,
+            MIN(predicted_yield) as min_yield,
+            COUNT(DISTINCT location) as unique_locations
+        FROM geographic_predictions 
+        WHERE user_id = ?
+    ''', (session['user_id'],)).fetchone()
+    
+    # Get recent predictions (last 5) WITH LOCATION
+    recent_predictions = conn.execute('''
+        SELECT 
+            id,
+            predicted_yield,
+            location,
+            rainfall_zone,
+            date
+        FROM geographic_predictions 
+        WHERE user_id = ? 
+        ORDER BY date DESC 
+        LIMIT 5
+    ''', (session['user_id'],)).fetchall()
+    
     conn.close()
     
-    user_stats = get_user_stats(session['user_id'])
+    # Prepare stats with defaults
+    total_predictions = stats['total_predictions'] if stats else 0
+    avg_yield = round(stats['avg_yield'], 1) if stats and stats['avg_yield'] else 0
+    farms_count = stats['unique_locations'] if stats and stats['unique_locations'] else 0
     
-    return render_template('dashboard.html', user=user, **user_stats)
+    # If no predictions yet, show 0 for farms
+    if total_predictions == 0:
+        farms_count = 0
+    elif farms_count == 0:
+        farms_count = 1  # At least 1 if they made predictions but location wasn't tracked
+    
+    return render_template('dashboard.html',
+                         user=user,
+                         total_predictions=total_predictions,
+                         avg_yield=avg_yield,
+                         farms_count=farms_count,
+                         recent_predictions=recent_predictions)
 
 @app.route('/predict', methods=['POST'])
 @login_required

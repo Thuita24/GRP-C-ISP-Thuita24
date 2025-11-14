@@ -1,0 +1,144 @@
+{
+  "model_info": {
+    "model_type": "Geographic Characteristic-Based Random Forest",
+    "version": "2.0",
+    "trained_date": "2025-11-03 10:36:58",
+    "description": "Cotton yield prediction using geographic characteristics instead of district names"
+  },
+  "data_info": {
+    "total_samples": 6452,
+    "training_samples": 5161,
+    "test_samples": 1291,
+    "districts_covered": 444,
+    "years": "2001-2023",
+    "geographic_coverage": {
+      "rainfall_range_mm": "207-3603",
+      "soil_types": [
+        "Red",
+        "Alluvial",
+        "Black",
+        "Laterite",
+        "Mixed"
+      ],
+      "irrigation_range": "10-85%"
+    }
+  },
+  "features": {
+    "count": 15,
+    "list": [
+      "temp_c_mean",
+      "dewpoint_c_mean",
+      "precip_mm_mean",
+      "ssrd_MJm2_mean",
+      "Avg_Annual_Rain_mm",
+      "Avg_Kharif_Rain_mm",
+      "Avg_Rabi_Rain_mm",
+      "Annual_CV_pct",
+      "Soil_Encoded",
+      "Irrigation_Pct",
+      "year_index",
+      "yield_lag1",
+      "season_Rabi",
+      "temp_rain_interaction",
+      "rain_irrigation_ratio"
+    ],
+    "categories": {
+      "climate": [
+        "temp_c_mean",
+        "dewpoint_c_mean",
+        "precip_mm_mean",
+        "ssrd_MJm2_mean"
+      ],
+      "rainfall": [
+        "Avg_Annual_Rain_mm",
+        "Avg_Kharif_Rain_mm",
+        "Avg_Rabi_Rain_mm",
+        "Annual_CV_pct"
+      ],
+      "geographic": [
+        "Soil_Encoded",
+        "Irrigation_Pct"
+      ],
+      "temporal": [
+        "year_index",
+        "yield_lag1",
+        "season_Rabi"
+      ],
+      "interactions": [
+        "temp_rain_interaction",
+        "rain_irrigation_ratio"
+      ]
+    }
+  },
+  "performance": {
+    "test_metrics": {
+      "r2_score": 0.6213132446601406,
+      "rmse": 0.7719965334502001,
+      "mae": 0.4974292669981146
+    },
+    "training_metrics": {
+      "r2_score": 0.7137860309790004,
+      "rmse": 0.7403575155163076
+    },
+    "cross_validation": {
+      "folds": 5,
+      "mean_r2": 0.3215815053590922,
+      "std_r2": 0.12694153152678778,
+      "scores": [
+        0.07857926004629945,
+        0.37881166169699776,
+        0.407824521323487,
+        0.42545012729470877,
+        0.31724195643396824
+      ]
+    },
+    "overfitting_gap": 0.0924727863188598
+  },
+  "comparison_with_baseline": {
+    "baseline_model": "District-Based Random Forest",
+    "baseline_test_r2": 0.49176190683153587,
+    "geographic_test_r2": 0.6213132446601406,
+    "improvement_percent": 26.344321515937487,
+    "conclusion": "Geographic model outperforms district-based baseline by 26.3%"
+  },
+  "hyperparameters": {
+    "n_estimators": 200,
+    "max_depth": 12,
+    "min_samples_split": 10,
+    "min_samples_leaf": 5,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "feature_importance": {
+    "temp_c_mean": 0.02614081936457039,
+    "dewpoint_c_mean": 0.03784753684910063,
+    "precip_mm_mean": 0.016198955804332425,
+    "ssrd_MJm2_mean": 0.018713643468266136,
+    "Avg_Annual_Rain_mm": 0.01172293942671335,
+    "Avg_Kharif_Rain_mm": 0.02091027142721673,
+    "Avg_Rabi_Rain_mm": 0.08589683322889029,
+    "Annual_CV_pct": 0.03383458718224185,
+    "Soil_Encoded": 0.0177931336480711,
+    "Irrigation_Pct": 0.02680918783489725,
+    "year_index": 0.06527974142274708,
+    "yield_lag1": 0.5779569120783086,
+    "season_Rabi": 8.744958233590347e-05,
+    "temp_rain_interaction": 0.019997899836387143,
+    "rain_irrigation_ratio": 0.04081008884592116
+  },
+  "deployment_notes": {
+    "kenya_adaptable": true,
+    "requires_district_names": false,
+    "input_requirements": [
+      "Temperature (\u00b0C)",
+      "Dewpoint (\u00b0C)",
+      "Precipitation (mm)",
+      "Solar radiation (MJ/m\u00b2)",
+      "Annual rainfall (mm)",
+      "Soil type (Red/Black/Alluvial/Laterite/Mixed)",
+      "Irrigation coverage (%)",
+      "Previous year yield (bales/ha)",
+      "Season (Kharif/Rabi)"
+    ]
+  }
+}

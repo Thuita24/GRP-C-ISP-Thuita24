@@ -1,0 +1,243 @@
+/* ============================================================================
+   static/css/style.css - Additional Styles for Geographic Model
+   ============================================================================ */
+
+
+/* ============================================================================
+   Geographic Model Styles
+   ============================================================================ */
+
+/* Prediction Form */
+.prediction-form .form-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.prediction-form .form-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.prediction-form .form-section h4 {
+    color: #28a745;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Tooltip Icon */
+.tooltip-icon {
+    cursor: help;
+    color: #17a2b8;
+    font-weight: bold;
+    margin-left: 5px;
+    transition: transform 0.2s;
+}
+
+.tooltip-icon:hover {
+    transform: scale(1.2);
+}
+
+/* Example Buttons */
+.example-btn {
+    margin: 5px;
+    transition: all 0.2s;
+    border-width: 2px;
+}
+
+.example-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Predict Button */
+.predict-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.predict-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Kenya Badge */
+.badge-kenya {
+    background: linear-gradient(135deg, #000000, #006600, #ff0000);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Results Page */
+.result-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.prediction-display {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    margin: 20px 0;
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+}
+
+.prediction-value {
+    font-size: 4rem;
+    font-weight: bold;
+    margin: 20px 0;
+    animation: zoomIn 0.5s ease-out;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.confidence-interval {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* Recommendations */
+.recommendation-item {
+    padding: 15px;
+    border-left: 4px solid;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.recommendation-success {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.recommendation-info {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+.recommendation-warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+/* Summary Grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.summary-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.summary-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Slider Enhancement */
+input[type="range"] {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #28a745, #20c997);
+    border-radius: 5px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    background: #28a745;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #28a745;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .prediction-value {
+        font-size: 2.5rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .example-btn {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+
+/* End of geographic_style.css */

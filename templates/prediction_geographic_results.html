@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Results - Cotton Prediction{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .prediction-display {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .prediction-value {
+        font-size: 4rem;
+        font-weight: bold;
+        margin: 20px 0;
+    }
+    .confidence-interval {
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .recommendation-item {
+        padding: 15px;
+        border-left: 4px solid;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+    .recommendation-success {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+    .recommendation-info {
+        background: #d1ecf1;
+        border-color: #17a2b8;
+    }
+    .recommendation-warning {
+        background: #fff3cd;
+        border-color: #ffc107;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    .summary-item {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>📊 Prediction Results</h2>
+        <p class="text-muted">
+            Geographic Characteristic-Based Model (Kenya Compatible)
+            {% if result.location and result.location != 'Unknown Location' and result.location != 'Unknown' %}
+                <br><strong> Location:</strong> {{ result.location }}
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- MAIN PREDICTION -->
+<div class="result-card">
+    <div class="prediction-display">
+        <h3>Predicted Cotton Yield</h3>
+        <div class="prediction-value">
+            {{ result.prediction }} <span style="font-size: 2rem;">bales/ha</span>
+        </div>
+        
+        <div class="confidence-interval">
+            <p class="mb-2"><strong>95% Confidence Interval</strong></p>
+            <h4>{{ result.confidence_lower }} - {{ result.confidence_upper }} bales/ha</h4>
+            <small>The actual yield is likely to fall within this range</small>
+        </div>
+    </div>
+</div>
+
+<!-- INPUT SUMMARY -->
+<div class="result-card">
+    <h4>📍 Your Input Summary</h4>
+    <div class="summary-grid">
+        <div class="summary-item">
+            <strong>🌡️ Temperature:</strong><br>
+            {{ result.inputs.temp_c }}°C
+        </div>
+        <div class="summary-item">
+            <strong>🌧️ Rainfall Zone:</strong><br>
+            <span class="badge bg-info">{{ result.rainfall_zone }}</span><br>
+            {{ result.inputs.annual_rain }}mm annually
+        </div>
+        <div class="summary-item">
+            <strong>🌱 Soil Type:</strong><br>
+            {{ result.inputs.soil_type }}
+        </div>
+        <div class="summary-item">
+            <strong>💧 Irrigation:</strong><br>
+            {{ result.inputs.irrigation }}% coverage
+        </div>
+        <div class="summary-item">
+            <strong>☀️ Solar Radiation:</strong><br>
+            {{ result.inputs.solar_rad }} MJ/m²
+        </div>
+        <div class="summary-item">
+            <strong>💨 Dewpoint:</strong><br>
+            {{ result.inputs.dewpoint_c }}°C
+        </div>
+    </div>
+</div>
+
+<!-- RECOMMENDATIONS -->
+<div class="result-card">
+    <h4>💡 Recommendations</h4>
+    {% for rec in result.recommendations %}
+    <div class="recommendation-item recommendation-{{ rec.type }}">
+        <span style="font-size: 1.5rem; margin-right: 10px;">{{ rec.icon }}</span>
+        {{ rec.text }}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- About This Prediction -->
+<div class="alert alert-info">
+    <strong>ℹ️ About This Prediction:</strong> 
+    This prediction is based on climate, rainfall, soil, and irrigation data from your location. 
+    The actual yield may vary by ±0.8 bales/ha depending on pest management, fertilizer application, 
+    and farming practices.
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="text-center">
+    <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success btn-lg">
+        🔄 Make Another Prediction
+    </a>
+    <a href="{{ url_for('geographic.history') }}" class="btn btn-info btn-lg">
+        📜 View History
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+        🏠 Back to Dashboard
+    </a>
+</div>
+
+
+{% endblock %}'''
+
+with open(f'{project_root}/templates/prediction_geographic_results.html', 'w') as f:
+    f.write(results_html)
+
+print("Created: templates/prediction_geographic_results.html")

@@ -14,6 +14,13 @@
     .stats-card:hover {
         transform: translateY(-2px);
     }
+    .feature-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
 </style>
 {% endblock %}
 
@@ -21,7 +28,7 @@
 <div class="row mb-4">
     <div class="col">
         <h2>Welcome back, {{ user.name if user else 'User' }}!</h2>
-        <p class="text-muted">Cotton  Prediction Dashboard</p>
+        <p class="text-muted">Cotton Prediction Dashboard</p>
     </div>
 </div>
 
@@ -35,14 +42,16 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stats-card">
-            <div class="card-body text-center">
-                <h3 class="text-info">{{ avg_yield or 0 }}%</h3>
-                <p class="mb-0">Avg Predicted Yield</p>
-            </div>
+
+  <div class="col-md-3">
+    <div class="card stats-card">
+        <div class="card-body text-center">
+            <h3 class="text-info">{{ avg_yield or 0 }}</h3>  
+            <p class="mb-0">Avg Yield (bales/ha)</p>
         </div>
     </div>
+</div>
+
     <div class="col-md-3">
         <div class="card stats-card">
             <div class="card-body text-center">
@@ -54,130 +63,92 @@
     <div class="col-md-3">
         <div class="card stats-card">
             <div class="card-body text-center">
-                <h3 class="text-danger">85%</h3>
-                <p class="mb-0">Accuracy Rate</p>
+                <h3 class="text-danger">62%</h3>
+                <p class="mb-0">Model Accuracy (R²)</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- New Prediction Form -->
-<div class="row">
-    <div class="col-md-8">
-        <div class="card prediction-card">
-            <div class="card-header">
-                <h4 class="mb-0">Make New Prediction</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('predict') }}">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="temperature" class="form-label">Average Temperature (°C)</label>
-                                <input type="number" class="form-control" id="temperature" 
-                                       name="temperature" step="0.1" min="0" max="50" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="rainfall" class="form-label">Rainfall (mm)</label>
-                                <input type="number" class="form-control" id="rainfall" 
-                                       name="rainfall" step="0.1" min="0" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="humidity" class="form-label">Humidity (%)</label>
-                                <input type="number" class="form-control" id="humidity" 
-                                       name="humidity" min="0" max="100" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="soil" class="form-label">Soil Type</label>
-                                <input type="text" class="form-control" id="soil" 
-                                       name="soil" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="min_temperature" class="form-label">Min Temperature (°C)</label>
-                                <input type="number" class="form-control" id="min_temperature" 
-                                       name="min_temperature" step="0.1" min="0" required>
-                            </div>
-                        </div>
-
-                
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="max_temperature" class="form-label">Max Temperature (°C)</label>
-                                <input type="number" class="form-control" id="max_temperature" 
-                                       name="max_temperature" step="0.1" min="0" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="area" class="form-label">Farm Area (hectares)</label>
-                                <input type="number" class="form-control" id="area" 
-                                       name="area" step="0.1" min="0.1" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-light btn-lg w-100">
-                         Predict Planting Time
-                    </button>
-                </form>
+<!-- AI-Powered Prediction Features (3 CARDS) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="mb-3">🌾 AI-Powered Predictions</h4>
+    </div>
+    
+    <!-- Card 1: Geographic Yield Prediction (Main Feature) -->
+    <div class="col-md-4 mb-3">
+        <div class="card feature-card shadow-sm h-100" style="border: 3px solid #28a745;">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <span style="font-size: 3rem;">🌍</span>
+                </div>
+                <h5 class="card-title">
+                    Cotton Yield Prediction 
+                    <span class="badge bg-success">Kenya  🇰🇪</span>
+                </h5>
+                <p class="card-text text-muted">
+                    AI-powered yield prediction using geographic characteristics. 
+                   
+                </p>
+                <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success btn-lg w-100">
+                    🎯 Predict Yield
+                </a>
+                <small class="d-block mt-2 text-success fw-bold">
+                    Recommended for Kenya users!
+                </small>
             </div>
         </div>
     </div>
-    
-    <!-- Recent Predictions -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5> Recent Predictions</h5>
+
+    <!-- Card 2: Optimal Planting Time -->
+    <div class="col-md-4 mb-3">
+        <div class="card feature-card shadow-sm h-100" style="border: 2px solid #17a2b8;">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <span style="font-size: 3rem;">📅</span>
+                </div>
+                <h5 class="card-title">
+                    Optimal Planting Time
+                    <span class="badge bg-info"></span>
+                </h5>
+                <p class="card-text text-muted">
+                    Find the best month to plant cotton based on your location's 
+                    rainfall patterns and climate conditions.
+                </p>
+                <a href="{{ url_for('geographic.optimal_planting_form') }}" class="btn btn-info btn-lg w-100">
+                    Find Best Time
+                </a>
             </div>
-            <div class="card-body">
-                {% if recent_predictions %}
-                    {% for prediction in recent_predictions %}
-                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                        <div>
-                            <small class="text-muted">{{ prediction.date.strftime('%Y-%m-%d') }}</small>
-                            <br>
-                            <strong>{{ prediction.predicted_yield }}%</strong>
-                        </div>
-                        <span class="badge bg-success">{{ prediction.area }}ha</span>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted">No predictions yet. Make your first prediction!</p>
-                {% endif %}
-                
-                <a href="{{ url_for('prediction_history') }}" class="btn btn-outline-success btn-sm w-100 mt-2">
-                    View All Predictions
+        </div>
+    </div>
+
+    <!-- Card 3: Prediction History -->
+    <div class="col-md-4 mb-3">
+        <div class="card feature-card shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <span style="font-size: 3rem;">📜</span>
+                </div>
+                <h5 class="card-title">Prediction History</h5>
+                <p class="card-text text-muted">
+                    View your past yield predictions and planting time recommendations 
+                    with detailed analytics.
+                </p>
+                <a href="{{ url_for('geographic.history') }}" class="btn btn-primary btn-lg w-100">
+                     View History
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Prediction Result Display -->
+<!-- Prediction Result Display (if any) -->
 {% if prediction_result %}
-<div class="row mt-4">
+<div class="row mb-4">
     <div class="col-12">
         <div class="alert alert-success alert-dismissible fade show">
-            <h5>Prediction Complete!</h5>
+            <h5> Prediction Complete!</h5>
             <p class="mb-0">
                 Predicted Cotton Yield: <strong>{{ prediction_result.yield }}%</strong>
                 <br>
@@ -189,4 +160,71 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Recent Predictions Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Recent Predictions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_predictions and recent_predictions|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Predicted Yield</th>
+                                    <th>Rainfall Zone</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in recent_predictions %}
+                                <tr>
+                                    <td>{{ prediction['date'][:10] if prediction['date'] else 'N/A' }}</td>
+                                    <td>
+                                        {% if prediction['location'] and prediction['location'] != 'Unknown' and prediction['location'] != 'Unknown Location' %}
+                                            <strong>{{ prediction['location'] }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong class="text-success">{{ prediction['predicted_yield'] }} bales/ha</strong></td>
+                                    <td>
+                                        {% if prediction['rainfall_zone'] == 'Arid' %}
+                                            <span class="badge bg-danger">🏜️ Arid</span>
+                                        {% elif prediction['rainfall_zone'] == 'Semi-arid' %}
+                                            <span class="badge bg-warning text-dark">🌾 Semi-arid</span>
+                                        {% elif prediction['rainfall_zone'] == 'Sub-humid' %}
+                                            <span class="badge bg-info">🌱 Sub-humid</span>
+                                        {% elif prediction['rainfall_zone'] == 'Humid' %}
+                                            <span class="badge bg-success">🌳 Humid</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ prediction['rainfall_zone'] }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-success">Complete</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <span style="font-size: 3rem;">🌾</span>
+                        <h5 class="mt-3">No predictions yet</h5>
+                        <p class="text-muted mb-3">Start by making your first cotton yield prediction!</p>
+                        <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success btn-lg">
+                            🎯 Make First Prediction
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"> Error</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-danger"><strong>An error occurred:</strong></p>
+                    <p class="alert alert-danger">{{ error }}</p>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                            ← Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('prediction.predict_form') }}" class="btn btn-secondary">
+                            Try Again
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
