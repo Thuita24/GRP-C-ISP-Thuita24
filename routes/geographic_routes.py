@@ -278,7 +278,7 @@ def predict_form():
 @geographic_bp.route('/predict', methods=['POST'])
 @login_required
 def predict():
-    """Handle geographic prediction"""
+    """Handle geographic prediction WITH optimal planting analysis"""
     try:
         data = request.form.to_dict()
         
@@ -291,28 +291,140 @@ def predict():
                 flash(f'{field.replace("_", " ").title()} is required.', 'error')
                 return redirect(url_for('geographic.predict_form'))
         
+        # =====================================================================
+        # PART 1: CURRENT CONDITIONS YIELD PREDICTION
+        # =====================================================================
+        
         # Prepare features
         X = prepare_features(data)
         
-        # Predict
-        prediction = model.predict(X)[0]
+        # Predict for current conditions
+        current_yield = model.predict(X)[0]
         
         # Confidence interval
-        confidence_lower = max(0, prediction - (MODEL_RMSE * 1.96))
-        confidence_upper = prediction + (MODEL_RMSE * 1.96)
-        prediction = max(0, prediction)
+        confidence_lower = max(0, current_yield - (MODEL_RMSE * 1.96))
+        confidence_upper = current_yield + (MODEL_RMSE * 1.96)
+        current_yield = max(0, current_yield)
         
         # Rainfall zone
         rainfall_zone = get_rainfall_zone(float(data['annual_rain']))
         
-        # Get location name from form data
+        # Get location name
         location = data.get('location', 'Unknown Location')
         
         # Recommendations
-        recommendations = generate_recommendations(data, prediction)
+        recommendations = generate_recommendations(data, current_yield)
         
-        # Save to database WITH LOCATION
+        # =====================================================================
+        # PART 2: OPTIMAL PLANTING TIME ANALYSIS
+        # =====================================================================
+        
+        print(f"\n{'='*60}")
+        print(f"🌾 ANALYZING OPTIMAL PLANTING TIME FOR: {location}")
+        print(f"{'='*60}")
+        
+        # Prepare location data for optimal planting
+        location_data = {
+            'temp_c': float(data['temp_c']),
+            'dewpoint_c': float(data['dewpoint_c']),
+            'precip_mm': float(data['precip_mm']),
+            'solar_rad': float(data['solar_rad']),
+            'annual_rain': float(data['annual_rain']),
+            'rain_cv': float(data.get('rain_cv', 20)),
+            'soil_type': data['soil_type'],
+            'irrigation': float(data['irrigation']),
+            'prev_yield': float(data.get('prev_yield', 1.5)),
+            'location': location
+        }
+        
+        # Predict yield for each planting month
+        monthly_predictions = []
+        
+        for month in range(1, 13):
+            # Adjust climate based on planting month
+            monthly_climate = adjust_climate_for_planting_month(location_data, month)
+            
+            # Prepare features
+            X_month = prepare_features(monthly_climate)
+            
+            # Predict yield
+            predicted_yield = model.predict(X_month)[0]
+            predicted_yield = max(0, predicted_yield)
+            
+            monthly_predictions.append({
+                'month': get_month_name(month),
+                'month_num': month,
+                'predicted_yield': round(predicted_yield, 2),
+                'season': get_kenya_season(month)
+            })
+            
+            print(f"  {get_month_name(month):12} ({get_kenya_season(month):12}): {predicted_yield:.2f} bales/ha")
+        
+        # Sort by predicted yield
+        monthly_predictions.sort(key=lambda x: x['predicted_yield'], reverse=True)
+        
+        # Get top 3 months
+        best_months = monthly_predictions[:3]
+        
+        print(f"\n🏆 TOP 3 PLANTING MONTHS:")
+        for i, month in enumerate(best_months, 1):
+            print(f"  {i}. {month['month']:12} - {month['predicted_yield']} bales/ha ({month['season']})")
+        
+        # Calculate improvement potential
+        best_yield = best_months[0]['predicted_yield']
+        yield_improvement = best_yield - current_yield
+        yield_improvement_pct = (yield_improvement / current_yield * 100) if current_yield > 0 else 0
+        
+        print(f"\n💡 INSIGHT: Planting in {best_months[0]['month']} could increase yield by {yield_improvement:.2f} bales/ha ({yield_improvement_pct:.1f}%)")
+        print(f"{'='*60}\n")
+        
+        # Generate planting recommendations
+        planting_recommendations = []
+        
+        # Best month
+        if yield_improvement > 0.3:
+            planting_recommendations.append({
+                'type': 'success',
+                'icon': '🏆',
+                'text': f'Optimal planting month: {best_months[0]["month"]} ({best_months[0]["predicted_yield"]} bales/ha) - {yield_improvement_pct:.0f}% higher than current conditions!'
+            })
+        else:
+            planting_recommendations.append({
+                'type': 'info',
+                'icon': '✓',
+                'text': f'Best planting month: {best_months[0]["month"]} ({best_months[0]["predicted_yield"]} bales/ha)'
+            })
+        
+        # Alternative months
+        if len(best_months) > 1:
+            alt_months = ', '.join([f'{m["month"]} ({m["predicted_yield"]} bales/ha)' for m in best_months[1:]])
+            planting_recommendations.append({
+                'type': 'info',
+                'icon': '📅',
+                'text': f'Alternative months: {alt_months}'
+            })
+        
+        # Season advice
+        if best_months[0]['season'] == 'Long Rains':
+            planting_recommendations.append({
+                'type': 'info',
+                'icon': '🌳',
+                'text': 'Long rains season (March-May) provides reliable moisture for cotton growth'
+            })
+        elif best_months[0]['season'] == 'Short Rains':
+            planting_recommendations.append({
+                'type': 'info',
+                'icon': '🌱',
+                'text': 'Short rains season (October-December) offers a secondary planting window'
+            })
+        
+        # =====================================================================
+        # PART 3: SAVE TO DATABASE
+        # =====================================================================
+        
         conn = get_db_connection()
+        
+        # Save yield prediction
         conn.execute('''
             INSERT INTO geographic_predictions 
             (user_id, temp_c, dewpoint_c, precip_mm, solar_rad, annual_rain, 
@@ -324,26 +436,56 @@ def predict():
             data['temp_c'], data['dewpoint_c'], data['precip_mm'], data['solar_rad'],
             data['annual_rain'], data.get('rain_cv', 20), data['soil_type'],
             data['irrigation'], data.get('prev_yield', 1.5),
-            round(prediction, 2), round(confidence_lower, 2), 
+            round(current_yield, 2), round(confidence_lower, 2), 
             round(confidence_upper, 2), rainfall_zone, location
         ))
+        
+        # Save optimal planting recommendation
+        conn.execute('''
+            INSERT INTO planting_recommendations 
+            (user_id, location, annual_rain, best_month, best_score, date)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (
+            session['user_id'],
+            location,
+            location_data['annual_rain'],
+            best_months[0]['month'],
+            best_months[0]['predicted_yield']
+        ))
+        
         conn.commit()
         conn.close()
         
-        # User-friendly result 
+        # =====================================================================
+        # PART 4: PREPARE COMBINED RESULT
+        # =====================================================================
+        
         result = {
-            'prediction': round(prediction, 2),
+            # Current conditions yield
+            'prediction': round(current_yield, 2),
             'confidence_lower': round(confidence_lower, 2),
             'confidence_upper': round(confidence_upper, 2),
             'rainfall_zone': rainfall_zone,
             'location': location,
             'inputs': data,
-            'recommendations': recommendations
+            'recommendations': recommendations,
+            
+            # Optimal planting analysis
+            'monthly_predictions': monthly_predictions,
+            'best_months': best_months,
+            'planting_recommendations': planting_recommendations,
+            'yield_improvement': round(yield_improvement, 2),
+            'yield_improvement_pct': round(yield_improvement_pct, 1),
+            'best_month_name': best_months[0]['month'],
+            'best_month_yield': best_months[0]['predicted_yield']
         }
         
         return render_template('prediction_geographic_results.html', result=result)
         
     except Exception as e:
+        print(f"❌ Error in prediction: {str(e)}")
+        import traceback
+        traceback.print_exc()
         flash(f'Prediction error: {str(e)}', 'error')
         return redirect(url_for('geographic.predict_form'))
 
@@ -483,7 +625,7 @@ def load_example(example_name):
 @login_required
 def optimal_planting_form():
     """Show optimal planting time form"""
-    return render_template('optimal_planting_form.html',  # ← CHANGED THIS LINE
+    return render_template('optimal_planting_form.html',
                          soil_types=soil_classes)
 
 @geographic_bp.route('/optimal-planting', methods=['POST'])
@@ -618,7 +760,7 @@ def optimal_planting():
             location_data['location'],
             location_data['annual_rain'],
             best_months[0]['month'],
-            best_months[0]['predicted_yield']  # This is now a YIELD prediction!
+            best_months[0]['predicted_yield']
         ))
         conn.commit()
         conn.close()
@@ -627,8 +769,8 @@ def optimal_planting():
         result = {
             'location': location_data['location'],
             'annual_rain': location_data['annual_rain'],
-            'monthly_predictions': monthly_predictions,  # All 12 months
-            'best_months': best_months,  # Top 3
+            'monthly_predictions': monthly_predictions,
+            'best_months': best_months,
             'recommendations': recommendations
         }
         
