@@ -70,14 +70,12 @@
     </div>
 </div>
 
-<!-- AI-Powered Prediction Features (3 CARDS) -->
 <div class="row mb-4">
     <div class="col-12">
         <h4 class="mb-3">🌾 AI-Powered Predictions</h4>
     </div>
     
-    <!-- Card 1: Geographic Yield Prediction (Main Feature) -->
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
         <div class="card feature-card shadow-sm h-100" style="border: 3px solid #28a745;">
             <div class="card-body text-center">
                 <div class="mb-3">
@@ -85,14 +83,13 @@
                 </div>
                 <h5 class="card-title">
                     Cotton Advisor
-                    <span class="badge bg-success">Kenya  🇰🇪</span>
+                    <span class="badge bg-success">Kenya 🇰🇪</span>
                 </h5>
                 <p class="card-text text-muted">
                     Generate a comprehensive report including yield forecast and optimal planting time recommendations based on your location. 
-                   
                 </p>
                 <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success btn-lg w-100">
-                     New Analysis
+                    New Analysis
                 </a>
                 <small class="d-block mt-2 text-success fw-bold">
                     Recommended for Kenya users!
@@ -101,8 +98,7 @@
         </div>
     </div>
 
-    <!-- Card 2: Prediction History -->
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
         <div class="card feature-card shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="mb-3">
@@ -114,7 +110,7 @@
                     with detailed analytics.
                 </p>
                 <a href="{{ url_for('geographic.history') }}" class="btn btn-primary btn-lg w-100">
-                     View History
+                    View History
                 </a>
             </div>
         </div>
