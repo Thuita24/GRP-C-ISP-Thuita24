@@ -1,0 +1,134 @@
+/* style.css */
+
+/* Global Reset and Font */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+}
+
+/* Header (Assuming it is in your base.html) */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px;
+    background-color: #38761d; /* Dark Green Header */
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-container a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+}
+
+/* Hero Section and Background Image */
+.hero-section {
+    /* --- CRITICAL: Ensure this path is correct --- */
+    background-image: url('/static/lily-miller-HW82AIN9Gmo-unsplash.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 90vh; 
+    display: flex;
+    align-items: center; 
+    justify-content: center; /* Center content horizontally */
+    padding: 50px 0;
+}
+
+/* Content Overlay for Readability */
+.content-overlay {
+    background-color: rgba(255, 255, 255, 0.95); /* Semi-transparent white */
+    padding: 40px 60px; /* More padding for cleaner look */
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Stronger shadow to pop */
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.content-overlay h1 {
+    color: #38761d; /* Dark Green header */
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.content-overlay .tagline {
+    font-size: 1.25rem;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+/* Button Styling */
+.cta-buttons {
+    margin-bottom: 40px;
+}
+
+.btn-cta {
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 0 10px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+.btn-primary { /* Login */
+    background-color: #4a86e8; 
+    color: white;
+    border: 2px solid #4a86e8;
+}
+
+.btn-primary:hover {
+    background-color: #3b74d4;
+    transform: translateY(-2px);
+}
+
+.btn-secondary { /* Sign Up */
+    background-color: #6aa84f; 
+    color: white;
+    border: 2px solid #6aa84f;
+}
+
+.btn-secondary:hover {
+    background-color: #5b9643;
+    transform: translateY(-2px);
+}
+
+/* Features Styling */
+.features-list {
+    text-align: left;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.features-list h2 {
+    color: #6aa84f; 
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.feature-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.feature-card {
+    flex: 1;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.feature-card h3 {
+    color: #38761d;
+    font-size: 1.3rem;
+    margin-top: 0;
+}

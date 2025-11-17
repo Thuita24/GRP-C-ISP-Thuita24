@@ -391,8 +391,6 @@ def signup():
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         phone = request.form.get('phone', '').strip()
-        location = request.form.get('location', '').strip()
-        
         errors = []
         
         if not name or len(name) < 2:
@@ -406,9 +404,7 @@ def signup():
         
         if password != confirm_password:
             errors.append('Passwords do not match.')
-        
-        if not location:
-            errors.append('Please enter your farm location.')
+
         
         if not errors:
             conn = get_db_connection()
@@ -433,10 +429,10 @@ def signup():
             
             try:
                 cursor = conn.execute('''
-                    INSERT INTO users (name, email, password_hash, phone, location, 
+                    INSERT INTO users (name, email, password_hash, phone, 
                                      mfa_enabled, mfa_secret, backup_codes)
-                    VALUES (?, ?, ?, ?, ?, 1, ?, ?)
-                ''', (name, email, password_hash, phone, location, mfa_secret, backup_codes_str))
+                    VALUES (?, ?, ?, ?, 1, ?, ?)
+                ''', (name, email, password_hash, phone, mfa_secret, backup_codes_str))
                 conn.commit()
                 
                 user_id = cursor.lastrowid
@@ -751,22 +747,22 @@ def predict():
 def profile():
     """User profile page"""
     if request.method == 'POST':
+        # ... (Existing POST logic remains the same for profile update) ...
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip().lower()
         phone = request.form.get('phone', '').strip()
-        location = request.form.get('location', '').strip()
         bio = request.form.get('bio', '').strip()
         
-        if not name or not validate_email(email) or not location:
+        if not name or not validate_email(email):
             flash('Please fill in all required fields correctly.', 'error')
         else:
             try:
                 conn = get_db_connection()
                 conn.execute('''
                     UPDATE users 
-                    SET name = ?, email = ?, phone = ?, location = ?, bio = ?
+                    SET name = ?, email = ?, phone = ?, bio = ?
                     WHERE id = ?
-                ''', (name, email, phone, location, bio, session['user_id']))
+                ''', (name, email, phone, bio, session['user_id']))
                 conn.commit()
                 conn.close()
                 
@@ -779,10 +775,41 @@ def profile():
     
     conn = get_db_connection()
     user = conn.execute('''
-        SELECT name, email, phone, location, bio, mfa_enabled, created_date, last_login, is_google_user
+        SELECT name, email, phone, bio, mfa_enabled, created_date, last_login, is_google_user
         FROM users WHERE id = ?
     ''', (session['user_id'],)).fetchone()
     conn.close()
+    
+    # -------------------------------------------------------------------
+    # FIX: Convert TIMESTAMP strings to datetime objects
+    # -------------------------------------------------------------------
+    if user:
+        # Convert the immutable sqlite3.Row object to a mutable dictionary
+        # to allow date field replacement.
+        user_dict = dict(user) 
+        
+        # SQLite's default TIMESTAMP format
+        SQLITE_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+        
+        # Convert created_date
+        created_date_str = user_dict.get('created_date')
+        if created_date_str and isinstance(created_date_str, str):
+            try:
+                user_dict['created_date'] = datetime.strptime(created_date_str, SQLITE_DATETIME_FORMAT)
+            except ValueError:
+                # If the exact format is different (e.g., no seconds), ignore the conversion
+                pass
+
+        # Convert last_login
+        last_login_str = user_dict.get('last_login')
+        if last_login_str and isinstance(last_login_str, str):
+            try:
+                user_dict['last_login'] = datetime.strptime(last_login_str, SQLITE_DATETIME_FORMAT)
+            except ValueError:
+                pass
+        
+        # Overwrite the user variable with the dictionary containing datetime objects
+        user = user_dict
     
     user_stats = get_user_stats(session['user_id'])
     
@@ -832,6 +859,49 @@ def change_password():
     
     conn.close()
     return redirect(url_for('profile'))
+
+
+@app.route('/disable_mfa', methods=['POST'])
+@login_required
+def disable_mfa():
+    """Handle disabling Two-Factor Authentication"""
+    password = request.form.get('password')
+    
+    if not password:
+        flash('Password is required to disable MFA.', 'error')
+        return redirect(url_for('profile'))
+        
+    conn = get_db_connection()
+    
+    # 1. Verify user's current password
+    user = conn.execute(
+        'SELECT password_hash FROM users WHERE id = ?',
+        (session['user_id'],)
+    ).fetchone()
+    
+    if not user or not user['password_hash'] or not check_password_hash(user['password_hash'], password):
+        flash('Incorrect password. MFA remains enabled.', 'error')
+        conn.close()
+        return redirect(url_for('profile'))
+        
+    # 2. Disable MFA in the database
+    try:
+        # Note: We keep the mfa_secret in case the user re-enables it later, 
+        # but mfa_enabled is set to 0.
+        conn.execute(
+            'UPDATE users SET mfa_enabled = 0 WHERE id = ?',
+            (session['user_id'],)
+        )
+        conn.commit()
+        
+        flash('Two-Factor Authentication has been successfully disabled.', 'success')
+    except Exception:
+        flash('An error occurred while attempting to disable MFA.', 'error')
+    finally:
+        conn.close()
+        
+    return redirect(url_for('profile'))
+
 
 @app.route('/delete_account', methods=['POST'])
 @login_required

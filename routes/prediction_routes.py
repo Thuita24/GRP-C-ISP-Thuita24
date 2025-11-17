@@ -1,18 +1,17 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from services.prediction_service import PredictionService
-from services.planting_optimizer import PlantingOptimizer
 import json
+from functools import wraps
 
 # Create blueprint
 prediction_bp = Blueprint('prediction', __name__)
 
 # Initialize services
 prediction_service = PredictionService()
-planting_optimizer = PlantingOptimizer()
+# PlantingOptimizer initialization removed, as it's no longer used in this file
 
 # Helper function to check if user is logged in
 def login_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -33,8 +32,8 @@ def predict_form():
         location_data = {'states': [], 'seasons': ['Kharif', 'Rabi']}
     
     return render_template('prediction_form.html', 
-                         states=location_data.get('states', []),
-                         seasons=location_data.get('seasons', []))
+                           states=location_data.get('states', []),
+                           seasons=location_data.get('seasons', []))
 
 
 @prediction_bp.route('/predict', methods=['POST'])
@@ -82,65 +81,8 @@ def predict_yield():
             return render_template('error.html', error=str(e)), 500
 
 
-@prediction_bp.route('/optimal-planting', methods=['GET'])
-@login_required
-def optimal_planting_form():
-    """Display the optimal planting time form"""
-    # Load states and districts data
-    try:
-        with open('data/states_districts.json', 'r') as f:
-            location_data = json.load(f)
-    except Exception as e:
-        location_data = {'states': [], 'seasons': ['Kharif', 'Rabi']}
-    
-    return render_template('optimal_planting_form.html',
-                         states=location_data.get('states', []),
-                         seasons=location_data.get('seasons', []))
-
-
-@prediction_bp.route('/optimal-planting', methods=['POST'])
-@login_required
-def find_optimal_planting():
-    """Find optimal planting time"""
-    try:
-        # Get form data
-        state = request.form.get('state')
-        district = request.form.get('district')
-        season = request.form.get('season')
-        year = int(request.form.get('year', 2025))
-        
-        # Validate inputs
-        if not all([state, district, season]):
-            return jsonify({'error': 'Missing required fields'}), 400
-        
-        # Find optimal planting time
-        result = planting_optimizer.find_optimal_planting_time(
-            state=state,
-            district=district,
-            season=season,
-            year=year
-        )
-        
-        # Save to database
-        user_id = session.get('user_id')
-        recommendation_id = planting_optimizer.save_recommendation(user_id, result)
-        result['recommendation_id'] = recommendation_id
-        
-        # Return as JSON for AJAX or render template
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify(result)
-        else:
-            return render_template('optimal_planting_result.html', result=result)
-        
-    except Exception as e:
-        print(f"Optimization error: {e}")
-        import traceback
-        traceback.print_exc()
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'error': str(e)}), 500
-        else:
-            return render_template('error.html', error=str(e)), 500
+# REMOVED: @prediction_bp.route('/optimal-planting', methods=['GET']) (optimal_planting_form)
+# REMOVED: @prediction_bp.route('/optimal-planting', methods=['POST']) (find_optimal_planting)
 
 
 @prediction_bp.route('/prediction-history')

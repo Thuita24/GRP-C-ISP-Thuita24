@@ -1,4 +1,3 @@
-<!-- templates/profile.html - Updated with MFA section -->
 {% extends "base.html" %}
 
 {% block title %}Profile - Cotton Prediction{% endblock %}
@@ -10,15 +9,12 @@
             <div class="card-body text-center">
                 <div class="mb-3">
                     <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" 
-                         style="width: 80px; height: 80px;">
+                            style="width: 80px; height: 80px;">
                         <span class="text-white fs-2">{{ user.name[0].upper() if user and user.name else 'U' }}</span>
                     </div>
                 </div>
                 <h4>{{ user.name if user else 'User Name' }}</h4>
                 <p class="text-muted">{{ user.email if user else 'user@example.com' }}</p>
-                <p class="text-muted">
-                    <i class="bi bi-geo-alt"></i> {{ user.location if user else 'Farm Location' }}
-                </p>
                 <p>
                     {% if user.is_google_user %}
                         <span class="badge bg-info">Google Account</span>
@@ -34,7 +30,6 @@
             </div>
         </div>
 
-        <!-- Quick Stats -->
         <div class="card mt-3">
             <div class="card-header">
                 <h6>Account Statistics</h6>
@@ -68,39 +63,27 @@
                             <div class="mb-3">
                                 <label for="name" class="form-label">Full Name</label>
                                 <input type="text" class="form-control" id="name" name="name" 
-                                       value="{{ user.name if user else '' }}" required>
+                                        value="{{ user.name if user else '' }}" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" class="form-control" id="email" name="email" 
-                                       value="{{ user.email if user else '' }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" 
-                                       value="{{ user.phone if user else '' }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="location" class="form-label">Farm Location</label>
-                                <input type="text" class="form-control" id="location" name="location" 
-                                       value="{{ user.location if user else '' }}" required>
+                                        value="{{ user.email if user else '' }}" required>
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                value="{{ user.phone if user else '' }}">
+                    </div>
+                    <div class="mb-3">
                         <label for="bio" class="form-label">About/Bio (Optional)</label>
                         <textarea class="form-control" id="bio" name="bio" rows="3" 
-                                  placeholder="Tell us about your farming experience...">{{ user.bio if user else '' }}</textarea>
+                                    placeholder="Tell us about your farming experience...">{{ user.bio if user else '' }}</textarea>
                     </div>
 
                     <button type="submit" class="btn btn-success">Update Profile</button>
@@ -108,7 +91,6 @@
             </div>
         </div>
 
-        <!-- Two-Factor Authentication Section -->
         <div class="card mt-4">
             <div class="card-header">
                 <h5>🔐 Two-Factor Authentication (2FA)</h5>
@@ -138,7 +120,6 @@
             </div>
         </div>
 
-        <!-- Change Password (only for non-Google users) -->
         {% if not user.is_google_user %}
         <div class="card mt-4">
             <div class="card-header">
@@ -149,19 +130,19 @@
                     <div class="mb-3">
                         <label for="current_password" class="form-label">Current Password</label>
                         <input type="password" class="form-control" id="current_password" 
-                               name="current_password" required>
+                                name="current_password" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="new_password" class="form-label">New Password</label>
                         <input type="password" class="form-control" id="new_password" 
-                               name="new_password" minlength="6" required>
+                                name="new_password" minlength="6" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="confirm_new_password" class="form-label">Confirm New Password</label>
                         <input type="password" class="form-control" id="confirm_new_password" 
-                               name="confirm_new_password" required>
+                                name="confirm_new_password" required>
                     </div>
                     
                     <button type="submit" class="btn btn-warning">Change Password</button>
@@ -170,7 +151,6 @@
         </div>
         {% endif %}
 
-        <!-- Danger Zone -->
         <div class="card mt-4 border-danger">
             <div class="card-header bg-danger text-white">
                 <h5>Danger Zone</h5>
@@ -185,7 +165,6 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

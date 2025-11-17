@@ -84,15 +84,15 @@
                     <span style="font-size: 3rem;">🌍</span>
                 </div>
                 <h5 class="card-title">
-                    Cotton Yield Prediction 
+                    Cotton Advisor
                     <span class="badge bg-success">Kenya  🇰🇪</span>
                 </h5>
                 <p class="card-text text-muted">
-                    AI-powered yield prediction using geographic characteristics. 
+                    Generate a comprehensive report including yield forecast and optimal planting time recommendations based on your location. 
                    
                 </p>
                 <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success btn-lg w-100">
-                    🎯 Predict Yield
+                     New Analysis
                 </a>
                 <small class="d-block mt-2 text-success fw-bold">
                     Recommended for Kenya users!
@@ -101,29 +101,7 @@
         </div>
     </div>
 
-    <!-- Card 2: Optimal Planting Time -->
-    <div class="col-md-4 mb-3">
-        <div class="card feature-card shadow-sm h-100" style="border: 2px solid #17a2b8;">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <span style="font-size: 3rem;">📅</span>
-                </div>
-                <h5 class="card-title">
-                    Optimal Planting Time
-                    <span class="badge bg-info"></span>
-                </h5>
-                <p class="card-text text-muted">
-                    Find the best month to plant cotton based on your location's 
-                    rainfall patterns and climate conditions.
-                </p>
-                <a href="{{ url_for('geographic.optimal_planting_form') }}" class="btn btn-info btn-lg w-100">
-                    Find Best Time
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card 3: Prediction History -->
+    <!-- Card 2: Prediction History -->
     <div class="col-md-4 mb-3">
         <div class="card feature-card shadow-sm h-100">
             <div class="card-body text-center">
