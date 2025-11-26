@@ -144,54 +144,88 @@ Project Structure
 IS_PROJECT/
 │
 ├── data/
-│   ├── check_missing_data.py          # Inspect missing climate/yield values
-│   ├── fix_districts.py               # Clean and standardize district names
-│   ├── generate_states_districts.py   # Build JSON of states and districts
+
+│   ├── check_missing_data.py  # Inspect missing climate/yield values
+
+│ 
+├── fix_districts.py # Clean and standardize district names
+
+│   ├── generate_states_districts.py  # Build JSON of states and districts
+
 │   ├── import_historical_yields.py    # Process historical APY cotton yields
-│   ├── merged_dataset.csv             # Final dataset used for training
-│   └── states_districts.json          # Region list for frontend autofill
+
+│   ├── merged_dataset.csv        # Final dataset used for training
+
+│   └── states_districts.json     # Region list for frontend autofill
+
 │
 ├── models/
-│   ├── cotton_yield_model.pkl         # Final Random Forest model (Model B)
-│   ├── encoders.pkl                   # Soil-type encoders and preprocessing logic
-│   ├── metadata.json                  # Model metadata (features, training details)
-│   ├── model_config.json              # Hyperparameters used during training
-│   └── model.pkl                      # Earlier baseline model (unused)
+│   ├── cotton_yield_model.pkl   # Final Random Forest model (Model B)
+
+│   ├── encoders.pkl         # Soil-type encoders and preprocessing logic
+
+│   ├── metadata.json   # Model metadata (features, training details)
+
+│   ├── model_config.json  # Hyperparameters used during training
+
+│   └── model.pkl       # Earlier baseline model (unused)
+
 │
 ├── routes/
-│   ├── __init__.py                    # Route initialization
-│   ├── geographic_routes.py           # Region selection + default climate values
-│   └── prediction_routes.py           # Prediction endpoints (model inference)
+│   ├── __init__.py        # Route initialization
+
+│   ├── geographic_routes.py # Region selection + default climate values
+
+│   └── prediction_routes.py # Prediction endpoints (model inference)
+
 │
 ├── services/
-│   ├── planting_optimizer.py          # Determines best planting month
-│   ├── prediction_service.py          # Runs ML model and prepares predictions
-│   └── weather_service.py             # Generates or fetches climate inputs
+│   ├── planting_optimizer.py   # Determines best planting month
+
+│   ├── prediction_service.py    # Runs ML model and prepares predictions
+
+│   └── weather_service.py      # Generates or fetches climate inputs
+
 │
 ├── static/
 │   ├── css/
 │   │   ├── geographic_style.css       # Styles for region selection pages
+
 │   │   └── style.css                  # General styles
+
 │   └── js/
 │       └── geographic.js              # Frontend autofill logic
+
 │
 ├── templates/
 │   ├── base.html                      # Base layout
+
 │   ├── index.html                     # Homepage
+
 │   ├── dashboard.html                 # User dashboard
+
 │   ├── prediction_geographic.html     # Region + climate input page
+
 │   ├── prediction_geographic_results.html # Yield prediction results
+
 │   ├── optimal_planning_results.html  # Recommended planting month
+
 │   ├── prediction_history.html        # User prediction history
+
 │   ├── login.html                     # Login page
+
 │   ├── signup.html                    # User registration
+
 │   └── verify_mfa.html                # MFA setup (optional)
 │
 ├── cotton_app.db                      # SQLite database
+
 ├── cotton_app.db.backup               # Backup copy
 │
 ├── app.py                             # Main Flask application
+
 ├── requirements.txt                   # Python dependencies
+
 └── .gitignore                         # Ignored files for version control
 ```
 
