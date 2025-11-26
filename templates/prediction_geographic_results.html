@@ -60,6 +60,21 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ============================================================= -->
+            <!-- ⭐ ADDED BLOCK: BEST MONTH TO PLANT                            -->
+            <!-- ============================================================= -->
+
+            <div class="alert alert-success mt-4">
+                <h5 class="mb-1">🌱 Best Month to Plant</h5>
+                <p class="mb-0">
+                    The optimal planting month is 
+                    <strong>{{ result.best_month_name }}</strong>, 
+                    with an estimated yield of 
+                    <strong>{{ result.best_month_yield }} bales/ha</strong>.
+                </p>
+            </div>
+
         </div>
     </div>
 
@@ -73,7 +88,6 @@
         </div>
         <div class="card-body">
             
-            <!-- Key Insight Box -->
             {% if result.yield_improvement > 0.3 %}
             <div class="alert alert-success border-success" style="border-left: 5px solid #198754;">
                 <div class="d-flex align-items-center">
@@ -96,7 +110,7 @@
             </div>
             {% endif %}
 
-            <!-- Top 3 Months -->
+            <!-- Top 3 Best Months -->
             <h5 class="mt-4 mb-3">🏆 Top 3 Planting Months</h5>
             <div class="row">
                 {% for month in result.best_months %}
@@ -132,8 +146,9 @@
                 {% endfor %}
             </div>
 
-            <!-- Monthly Comparison Chart -->
+            <!-- Monthly Comparison Table -->
             <h5 class="mt-4 mb-3">📊 All Months Comparison</h5>
+
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
@@ -182,6 +197,7 @@
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 
@@ -215,10 +231,7 @@
         </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- SECTION 4: HOW IT WORKS                                           -->
-    <!-- ================================================================= -->
-    
+    <!-- HOW IT WORKS -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-secondary text-white">
             <h4 class="mb-0">ℹ️ How This Analysis Works</h4>
@@ -227,11 +240,10 @@
             <p><strong>This comprehensive analysis uses transfer learning:</strong></p>
             <ol>
                 <li><strong>Yield Prediction:</strong> Based on your specific climate and farm conditions</li>
-                <li><strong>Optimal Planting Analysis:</strong> Simulates Kenya's bimodal rainfall pattern (Long rains: Mar-May, Short rains: Oct-Dec) to predict yields for each planting month</li>
-                <li><strong>Model Training:</strong> Learned from 542 Indian cotton districts over 23 years, then adapted to Kenya's conditions</li>
-                <li><strong>Geographic Features:</strong> Uses temperature, rainfall, soil, and irrigation (no location-specific data needed)</li>
+                <li><strong>Optimal Planting Analysis:</strong> Simulates Kenya's bimodal rainfall pattern (Long rains: Mar-May, Short rains: Oct-Dec)</li>
+                <li><strong>Model Training:</strong> Learned from 542 Indian cotton districts over 23 years</li>
+                <li><strong>Geographic Features:</strong> Uses temperature, rainfall, soil, irrigation</li>
             </ol>
-            <p class="mb-0"><em>This approach provides accurate predictions for Kenya without requiring extensive Kenyan historical data!</em></p>
         </div>
     </div>
 

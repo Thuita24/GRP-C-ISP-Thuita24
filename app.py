@@ -89,6 +89,7 @@ def init_db():
 
     # ========================================================================
     # TABLE 3: GEOGRAPHIC PREDICTIONS (Model B - Main prediction table)
+    # With JSON storage for full results
     # ========================================================================
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS geographic_predictions (
@@ -108,10 +109,14 @@ def init_db():
             confidence_upper REAL NOT NULL,
             rainfall_zone TEXT NOT NULL,
             location TEXT DEFAULT 'Unknown',
+            monthly_predictions_json TEXT,          -- NEW
+            recommendations_json TEXT,              -- NEW
+            planting_recommendations_json TEXT,     -- NEW
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+
     
     # ========================================================================
     # TABLE 4: PLANTING RECOMMENDATIONS (Optimal planting time)

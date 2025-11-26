@@ -67,7 +67,6 @@
         <div class="alert alert-info">
             <strong>ℹ️ How it works:</strong> 
             This model predicts yield based on <strong>climate, rainfall, soil, and irrigation</strong> - 
-            making it perfect for Kenya and other regions.
             
         </div>
     </div>
@@ -139,14 +138,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- Data Source Disclaimer -->
-    <div class="mt-3">
-        <small class="text-muted">
-            <strong> Data Source:</strong> Values estimated from Kenya Meteorological Department records, 
-            CHIRPS satellite data, and agricultural surveys. Users can modify based on local measurements.
-        </small>
-    </div>
 </div>
 
 <!-- PREDICTION FORM -->
@@ -211,7 +202,7 @@
     <!-- RAINFALL CHARACTERISTICS -->
     <div class="form-section">
         <h4> Rainfall Characteristics</h4>
-        <p class="text-muted">Long-term rainfall patterns (use CHIRPS data or local records)</p>
+        <p class="text-muted">Long-term rainfall patterns </p>
         
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -300,7 +291,7 @@
                        value="{{ form_data.prev_yield if form_data else '' }}"
                        placeholder="1.5 (default)">
                 <small class="text-muted">
-                    <strong>Kenya avg:</strong> 1.5-2.0 bales/ha | <strong>India avg:</strong> 2.0-2.5 bales/ha
+                    <strong>Kenya avg:</strong> 1.5-2.0 bales/ha | <strong>
                 </small>
             </div>
         </div>
@@ -332,18 +323,7 @@
     </div>
 </div>
 
-<!-- Help Section -->
-<div class="card mt-4">
-    <div class="card-body">
-        <h5> Data Sources & Help</h5>
-        <ul class="mb-0">
-            <li><strong>Climate Data:</strong> Kenya Meteorological Department (<a href="https://meteo.go.ke" target="_blank">meteo.go.ke</a>) or NASA POWER</li>
-            <li><strong>Rainfall:</strong> CHIRPS satellite data at <a href="https://data.chc.ucsb.edu/products/CHIRPS-2.0/" target="_blank">CHIRPS Portal</a></li>
-            <li><strong>Soil Type:</strong> Visual identification, soil testing, or Kenya Soil Survey maps</li>
-            <li><strong>Model Details:</strong> <a href="{{ url_for('geographic.about') }}">Learn more about this model</a></li>
-        </ul>
-    </div>
-</div>
+
 
 <script>
 function loadRegion(regionName) {

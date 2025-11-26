@@ -6,6 +6,8 @@ import numpy as np
 import joblib
 import json
 
+from services.weather_service import WeatherService
+
 # Add at the top of geographic_routes.py (after imports)
 
 def get_month_name(month_num):
@@ -423,35 +425,28 @@ def predict():
         # =====================================================================
         
         conn = get_db_connection()
-        
-        # Save yield prediction
+
         conn.execute('''
-            INSERT INTO geographic_predictions 
-            (user_id, temp_c, dewpoint_c, precip_mm, solar_rad, annual_rain, 
-             rain_cv, soil_type, irrigation, prev_yield, predicted_yield, 
-             confidence_lower, confidence_upper, rainfall_zone, location, date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ''', (
-            session['user_id'],
-            data['temp_c'], data['dewpoint_c'], data['precip_mm'], data['solar_rad'],
-            data['annual_rain'], data.get('rain_cv', 20), data['soil_type'],
-            data['irrigation'], data.get('prev_yield', 1.5),
-            round(current_yield, 2), round(confidence_lower, 2), 
-            round(confidence_upper, 2), rainfall_zone, location
-        ))
-        
-        # Save optimal planting recommendation
-        conn.execute('''
-            INSERT INTO planting_recommendations 
-            (user_id, location, annual_rain, best_month, best_score, date)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        ''', (
-            session['user_id'],
-            location,
-            location_data['annual_rain'],
-            best_months[0]['month'],
-            best_months[0]['predicted_yield']
-        ))
+    INSERT INTO geographic_predictions 
+    (user_id, temp_c, dewpoint_c, precip_mm, solar_rad, annual_rain,
+     rain_cv, soil_type, irrigation, prev_yield, predicted_yield,
+     confidence_lower, confidence_upper, rainfall_zone, location,
+     monthly_predictions_json, recommendations_json, planting_recommendations_json,
+     date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+''', (
+    session['user_id'],
+    data['temp_c'], data['dewpoint_c'], data['precip_mm'], data['solar_rad'],
+    data['annual_rain'], data.get('rain_cv', 20), data['soil_type'],
+    data['irrigation'], data.get('prev_yield', 1.5),
+    round(current_yield, 2), round(confidence_lower, 2),
+    round(confidence_upper, 2), rainfall_zone, location,
+
+    # JSON fields
+    json.dumps(monthly_predictions),
+    json.dumps(recommendations),
+    json.dumps(planting_recommendations)
+))
         
         conn.commit()
         conn.close()
@@ -492,16 +487,51 @@ def predict():
 @geographic_bp.route('/history')
 @login_required
 def history():
-    """View geographic prediction history"""
+    """View geographic prediction history (joined with planting advice)"""
     conn = get_db_connection()
-    predictions = conn.execute('''
-        SELECT * FROM geographic_predictions 
-        WHERE user_id = ? 
+
+    # Fetch geographic yield predictions WITH ALL FIELDS
+    geo_rows = conn.execute('''
+        SELECT 
+            id, location, predicted_yield, confidence_lower, confidence_upper,
+            rainfall_zone, soil_type, irrigation, annual_rain,
+            temp_c, dewpoint_c, precip_mm, solar_rad, rain_cv, prev_yield, date
+        FROM geographic_predictions
+        WHERE user_id = ?
         ORDER BY date DESC
     ''', (session['user_id'],)).fetchall()
+
+    # Fetch planting recommendations
+    planting_rows = conn.execute('''
+        SELECT 
+            location, best_month, best_score, annual_rain, date
+        FROM planting_recommendations
+        WHERE user_id = ?
+        ORDER BY date DESC
+    ''', (session['user_id'],)).fetchall()
+
     conn.close()
-    
-    return render_template('prediction_geographic_history.html', predictions=predictions)
+
+    # Convert rows into dicts
+    geo = [dict(row) for row in geo_rows]
+    planting = [dict(row) for row in planting_rows]
+
+    # Merge corresponding planting info
+    for g in geo:
+        g['best_month'] = None
+        g['best_score'] = None
+
+        for p in planting:
+            if p['location'] == g['location']:
+                g['best_month'] = p['best_month']
+                g['best_score'] = p['best_score']
+                break
+
+    return render_template(
+        'prediction_geographic_history.html',
+        predictions=geo
+    )
+
 
 @geographic_bp.route('/about')
 def about():
@@ -511,114 +541,29 @@ def about():
 @geographic_bp.route('/examples/<example_name>')
 @login_required
 def load_example(example_name):
-    """Load pre-filled examples for different regions"""
-    examples = {
-        # ===================================================================
-        # KENYA - WESTERN REGION (Humid, Best for Cotton)
-        # ===================================================================
-        'kenya_busia': {
-            'name': 'Kenya - Busia County',
-            'temp_c': '24', 'dewpoint_c': '20', 'precip_mm': '110', 'solar_rad': '17',
-            'annual_rain': '1300', 'rain_cv': '18', 'soil_type': 'Red',
-            'irrigation': '15', 'prev_yield': '1.8'
-        },
-        'kenya_bungoma': {
-            'name': 'Kenya - Bungoma County',
-            'temp_c': '23', 'dewpoint_c': '19', 'precip_mm': '120', 'solar_rad': '17',
-            'annual_rain': '1400', 'rain_cv': '16', 'soil_type': 'Red',
-            'irrigation': '12', 'prev_yield': '1.9'
-        },
-        'kenya_kakamega': {
-            'name': 'Kenya - Kakamega County',
-            'temp_c': '23', 'dewpoint_c': '20', 'precip_mm': '130', 'solar_rad': '16',
-            'annual_rain': '1500', 'rain_cv': '15', 'soil_type': 'Red',
-            'irrigation': '10', 'prev_yield': '2.0'
-        },
-        
-        # ===================================================================
-        # KENYA - NYANZA REGION (Sub-humid)
-        # ===================================================================
-        'kenya_homabay': {
-            'name': 'Kenya - Homa Bay County',
-            'temp_c': '25', 'dewpoint_c': '20', 'precip_mm': '90', 'solar_rad': '18',
-            'annual_rain': '1100', 'rain_cv': '20', 'soil_type': 'Red',
-            'irrigation': '20', 'prev_yield': '1.7'
-        },
-        'kenya_migori': {
-            'name': 'Kenya - Migori County',
-            'temp_c': '24', 'dewpoint_c': '20', 'precip_mm': '95', 'solar_rad': '17',
-            'annual_rain': '1200', 'rain_cv': '18', 'soil_type': 'Red',
-            'irrigation': '18', 'prev_yield': '1.8'
-        },
-        'kenya_siaya': {
-            'name': 'Kenya - Siaya County',
-            'temp_c': '24', 'dewpoint_c': '21', 'precip_mm': '100', 'solar_rad': '17',
-            'annual_rain': '1250', 'rain_cv': '17', 'soil_type': 'Red',
-            'irrigation': '15', 'prev_yield': '1.8'
-        },
-        
-        # ===================================================================
-        # KENYA - EASTERN REGION (Semi-arid to Arid)
-        # ===================================================================
-        'kenya_machakos': {
-            'name': 'Kenya - Machakos County',
-            'temp_c': '22', 'dewpoint_c': '16', 'precip_mm': '55', 'solar_rad': '19',
-            'annual_rain': '650', 'rain_cv': '28', 'soil_type': 'Red',
-            'irrigation': '35', 'prev_yield': '1.3'
-        },
-        'kenya_makueni': {
-            'name': 'Kenya - Makueni County',
-            'temp_c': '23', 'dewpoint_c': '15', 'precip_mm': '50', 'solar_rad': '20',
-            'annual_rain': '600', 'rain_cv': '30', 'soil_type': 'Red',
-            'irrigation': '40', 'prev_yield': '1.2'
-        },
-        'kenya_kitui': {
-            'name': 'Kenya - Kitui County',
-            'temp_c': '26', 'dewpoint_c': '14', 'precip_mm': '35', 'solar_rad': '21',
-            'annual_rain': '450', 'rain_cv': '35', 'soil_type': 'Red',
-            'irrigation': '60', 'prev_yield': '1.0'
-        },
-        
-        # ===================================================================
-        # KENYA - RIFT VALLEY REGION (Semi-arid)
-        # ===================================================================
-        'kenya_baringo': {
-            'name': 'Kenya - Baringo County',
-            'temp_c': '27', 'dewpoint_c': '16', 'precip_mm': '60', 'solar_rad': '20',
-            'annual_rain': '700', 'rain_cv': '27', 'soil_type': 'Black',
-            'irrigation': '38', 'prev_yield': '1.4'
-        },
-        'kenya_westpokot': {
-            'name': 'Kenya - West Pokot County',
-            'temp_c': '25', 'dewpoint_c': '15', 'precip_mm': '65', 'solar_rad': '19',
-            'annual_rain': '750', 'rain_cv': '25', 'soil_type': 'Red',
-            'irrigation': '32', 'prev_yield': '1.5'
-        },
-        
-        # ===================================================================
-        # KENYA - COAST REGION (Sub-humid)
-        # ===================================================================
-        'kenya_kwale': {
-            'name': 'Kenya - Kwale County',
-            'temp_c': '26', 'dewpoint_c': '22', 'precip_mm': '85', 'solar_rad': '18',
-            'annual_rain': '1000', 'rain_cv': '22', 'soil_type': 'Laterite',
-            'irrigation': '25', 'prev_yield': '1.6'
-        },
-        'kenya_kilifi': {
-            'name': 'Kenya - Kilifi County',
-            'temp_c': '27', 'dewpoint_c': '23', 'precip_mm': '80', 'solar_rad': '19',
-            'annual_rain': '950', 'rain_cv': '24', 'soil_type': 'Laterite',
-            'irrigation': '28', 'prev_yield': '1.5'
-        },
-    }
-    
-    example = examples.get(example_name, examples['kenya_busia'])
-    
-    return render_template('prediction_geographic.html',
-                         soil_types=soil_classes,
-                         model_r2=MODEL_R2,
-                         form_data=example,
-                         example_name=example['name'])
+    """Load pre-filled example for a Kenyan region using Open-Meteo + fallback"""
+
+    try:
+        # This automatically:
+        # 1. Checks if region exists
+        # 2. Calls Open-Meteo
+        # 3. Falls back to static values if API fails
+        example = WeatherService.build_example_payload(example_name)
+
+    except Exception as e:
+        print(f"Error building example payload: {e}")
+        # Final fallback: Busia static config
+        example = WeatherService.FALLBACK_EXAMPLES["kenya_busia"]
+        example_name = "kenya_busia"
+
+    return render_template(
+        'prediction_geographic.html',
+        soil_types=soil_classes,
+        model_r2=MODEL_R2,
+        form_data=example,
+        example_name=example["name"]
+    )
+
         
 
 @geographic_bp.route('/optimal-planting-form')
