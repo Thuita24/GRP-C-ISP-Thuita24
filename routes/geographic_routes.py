@@ -432,8 +432,9 @@ def predict():
      rain_cv, soil_type, irrigation, prev_yield, predicted_yield,
      confidence_lower, confidence_upper, rainfall_zone, location,
      monthly_predictions_json, recommendations_json, planting_recommendations_json,
+     best_month, best_score,
      date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ''', (
     session['user_id'],
     data['temp_c'], data['dewpoint_c'], data['precip_mm'], data['solar_rad'],
@@ -441,11 +442,11 @@ def predict():
     data['irrigation'], data.get('prev_yield', 1.5),
     round(current_yield, 2), round(confidence_lower, 2),
     round(confidence_upper, 2), rainfall_zone, location,
-
-    # JSON fields
     json.dumps(monthly_predictions),
     json.dumps(recommendations),
-    json.dumps(planting_recommendations)
+    json.dumps(planting_recommendations),
+    best_months[0]['month'],        # ADD THIS
+    best_months[0]['predicted_yield']  # ADD THIS
 ))
         
         conn.commit()
@@ -487,25 +488,17 @@ def predict():
 @geographic_bp.route('/history')
 @login_required
 def history():
-    """View geographic prediction history (joined with planting advice)"""
+    """View geographic prediction history"""
     conn = get_db_connection()
 
-    # Fetch geographic yield predictions WITH ALL FIELDS
+    # Fetch ALL data from geographic_predictions (no joins needed!)
     geo_rows = conn.execute('''
         SELECT 
             id, location, predicted_yield, confidence_lower, confidence_upper,
             rainfall_zone, soil_type, irrigation, annual_rain,
-            temp_c, dewpoint_c, precip_mm, solar_rad, rain_cv, prev_yield, date
+            temp_c, dewpoint_c, precip_mm, solar_rad, rain_cv, prev_yield,
+            best_month, best_score, date
         FROM geographic_predictions
-        WHERE user_id = ?
-        ORDER BY date DESC
-    ''', (session['user_id'],)).fetchall()
-
-    # Fetch planting recommendations
-    planting_rows = conn.execute('''
-        SELECT 
-            location, best_month, best_score, annual_rain, date
-        FROM planting_recommendations
         WHERE user_id = ?
         ORDER BY date DESC
     ''', (session['user_id'],)).fetchall()
@@ -513,23 +506,11 @@ def history():
     conn.close()
 
     # Convert rows into dicts
-    geo = [dict(row) for row in geo_rows]
-    planting = [dict(row) for row in planting_rows]
-
-    # Merge corresponding planting info
-    for g in geo:
-        g['best_month'] = None
-        g['best_score'] = None
-
-        for p in planting:
-            if p['location'] == g['location']:
-                g['best_month'] = p['best_month']
-                g['best_score'] = p['best_score']
-                break
+    predictions = [dict(row) for row in geo_rows]
 
     return render_template(
         'prediction_geographic_history.html',
-        predictions=geo
+        predictions=predictions
     )
 
 
