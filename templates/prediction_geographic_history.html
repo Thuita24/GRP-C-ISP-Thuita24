@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - Geographic Model{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .prediction-item {
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        transition: transform 0.2s;
+    }
+    .prediction-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .badge-zone {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+    .reco-box {
+        background: #eefaf0;
+        border-left: 4px solid #28a745;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    .general-box {
+        background: #e9f2ff;
+        border-left: 4px solid #0d6efd;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2>📜 Geographic Model - Prediction History</h2>
+        <p class="text-muted">Your past predictions using the Geographic Characteristic-Based Model</p>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="mb-4">
+    <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success">🎯 New Prediction</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">🏠 Back to Dashboard</a>
+</div>
+
+<div class="history-card">
+    {% if predictions %}
+        <h4 class="mb-4">Total Predictions: {{ predictions|length }}</h4>
+
+        {% for pred in predictions %}
+        <div class="prediction-item">
+            <div class="row">
+
+                <div class="col-md-3">
+                    <strong>📅 Date:</strong><br>
+                    {{ pred['date'] }}
+                </div>
+
+                <div class="col-md-2">
+                    <strong>🌾 Predicted Yield:</strong><br>
+                    <span class="text-success" style="font-size:1.2rem; font-weight:bold;">
+                        {{ pred['predicted_yield'] }} bales/ha
+                    </span>
+                </div>
+
+                <div class="col-md-2">
+                    <strong>📊 Confidence:</strong><br>
+                    {{ pred['confidence_lower'] }} – {{ pred['confidence_upper'] }}
+                </div>
+
+                <div class="col-md-2">
+                    <strong>🌧️ Rainfall Zone:</strong><br>
+                    {% if pred['rainfall_zone'] == 'Arid' %}
+                        <span class="badge bg-danger badge-zone">🏜️ Arid</span>
+                    {% elif pred['rainfall_zone'] == 'Semi-arid' %}
+                        <span class="badge bg-warning badge-zone">🌾 Semi-arid</span>
+                    {% elif pred['rainfall_zone'] == 'Sub-humid' %}
+                        <span class="badge bg-info badge-zone">🌱 Sub-humid</span>
+                    {% else %}
+                        <span class="badge bg-success badge-zone">🌳 Humid</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <strong>📍 Location:</strong> {{ pred['location'] }}<br>
+                    <strong>🌱 Soil:</strong> {{ pred['soil_type'] }}<br>
+                    <strong>💧 Irrigation:</strong> {{ pred['irrigation'] }}%
+                </div>
+
+            </div>
+
+            <button class="btn btn-sm btn-outline-info mt-3"
+                data-bs-toggle="collapse"
+                data-bs-target="#details-{{ pred['id'] }}">
+                View Details & Recommendations
+            </button>
+
+            <div class="collapse mt-3" id="details-{{ pred['id'] }}">
+                <div class="card card-body">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>🌤️ Climate Variables</h6>
+                            <ul>
+                                <li><strong>Temperature:</strong> {{ pred['temp_c'] }}°C</li>
+                                <li><strong>Dewpoint:</strong> {{ pred['dewpoint_c'] }}°C</li>
+                                <li><strong>Monthly Rainfall:</strong> {{ pred['precip_mm'] }} mm</li>
+                                <li><strong>Solar Radiation:</strong> {{ pred['solar_rad'] }} MJ/m²</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🌧️ Rainfall & Soil</h6>
+                            <ul>
+                                <li><strong>Annual Rainfall:</strong> {{ pred['annual_rain'] }} mm</li>
+                                <li><strong>Rainfall Variability:</strong> {{ pred['rain_cv'] }}%</li>
+                                <li><strong>Prev Yield:</strong> {{ pred['prev_yield'] }} bales/ha</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================== -->
+                    <!-- ⭐ NEW BLOCK: BEST MONTH TO PLANT + BEST EXPECTED YIELD  -->
+                    <!-- ========================================================== -->
+                    <div class="general-box mt-3">
+                        <h6>📅 Optimal Planting Time</h6>
+                        <ul class="mb-0">
+                            <li><strong>Best Month:</strong> 
+                                {{ pred['best_month'] if pred['best_month'] else 'Not recorded' }}
+                            </li>
+                            <li><strong>Best Expected Yield:</strong> 
+                                {% if pred['best_score'] %}
+                                    {{ pred['best_score'] }} bales/ha
+                                {% else %}
+                                    Not available
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Model-specific recommendations -->
+                    <div class="reco-box">
+                        <h6>💡 Model Recommendations</h6>
+                        <ul style="margin-bottom:0;">
+                            {% if pred['rainfall_zone'] == 'Arid' %}
+                                <li>Irrigation is essential — boost to 40–60%.</li>
+                                <li>Apply mulch to retain soil moisture.</li>
+                            {% elif pred['rainfall_zone'] == 'Semi-arid' %}
+                                <li>Supplement irrigation during flowering.</li>
+                            {% elif pred['rainfall_zone'] == 'Sub-humid' %}
+                                <li>Ensure moderate drainage to prevent root rot.</li>
+                            {% else %}
+                                <li>Great rainfall zone — monitor for pest outbreaks.</li>
+                            {% endif %}
+
+                            {% if pred['temp_c'] > 32 %}
+                                <li>High temperatures — use heat-tolerant varieties.</li>
+                            {% endif %}
+                            {% if pred['irrigation'] < 20 %}
+                                <li>Increase irrigation to minimum 30%.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="text-center py-5">
+            <h4>No Predictions Yet</h4>
+            <p class="text-muted">Start by making your first prediction.</p>
+            <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-success">Make First Prediction</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Yield Prediction & Optimal Planting Analysis{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2>🌾 Complete Cotton Analysis</h2>
+            <p class="text-muted">
+                Yield Prediction + Optimal Planting Time Analysis
+                {% if result.location and result.location != 'Unknown Location' %}
+                    <br><strong>📍 Location:</strong> {{ result.location }}
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 1: CURRENT CONDITIONS YIELD                               -->
+    <!-- ================================================================= -->
+    
+    <div class="card mb-4 shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">1️⃣ Your Expected Yield (Current Conditions)</h4>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="metric-box">
+                        <h2 class="text-primary mb-2">{{ result.prediction }}</h2>
+                        <p class="text-muted mb-0"><strong>bales/ha</strong></p>
+                        <small class="text-muted">Predicted Yield</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-box">
+                        <h5 class="text-secondary">{{ result.confidence_lower }} - {{ result.confidence_upper }}</h5>
+                        <p class="text-muted mb-0"><strong>bales/ha</strong></p>
+                        <small class="text-muted">95% Confidence Range</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-box">
+                        <span class="badge 
+                            {% if result.rainfall_zone == 'Arid' %}bg-danger
+                            {% elif result.rainfall_zone == 'Semi-arid' %}bg-warning
+                            {% elif result.rainfall_zone == 'Sub-humid' %}bg-info
+                            {% else %}bg-success{% endif %} 
+                            px-4 py-2" style="font-size: 1.1rem;">
+                            {% if result.rainfall_zone == 'Arid' %}🏜️
+                            {% elif result.rainfall_zone == 'Semi-arid' %}🌾
+                            {% elif result.rainfall_zone == 'Sub-humid' %}🌱
+                            {% else %}🌳{% endif %}
+                            {{ result.rainfall_zone }}
+                        </span>
+                        <p class="text-muted mb-0 mt-2"><small>Rainfall Zone</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- ⭐ ADDED BLOCK: BEST MONTH TO PLANT                            -->
+            <!-- ============================================================= -->
+
+            <div class="alert alert-success mt-4">
+                <h5 class="mb-1">🌱 Best Month to Plant</h5>
+                <p class="mb-0">
+                    The optimal planting month is 
+                    <strong>{{ result.best_month_name }}</strong>, 
+                    with an estimated yield of 
+                    <strong>{{ result.best_month_yield }} bales/ha</strong>.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 2: OPTIMAL PLANTING TIME                                  -->
+    <!-- ================================================================= -->
+    
+    <div class="card mb-4 shadow-sm border-success">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">2️⃣ Optimal Planting Time Analysis</h4>
+        </div>
+        <div class="card-body">
+            
+            {% if result.yield_improvement > 0.3 %}
+            <div class="alert alert-success border-success" style="border-left: 5px solid #198754;">
+                <div class="d-flex align-items-center">
+                    <span style="font-size: 2.5rem;" class="me-3">💡</span>
+                    <div>
+                        <h5 class="mb-1"><strong>Key Insight:</strong></h5>
+                        <p class="mb-0">
+                            By planting in <strong>{{ result.best_month_name }}</strong>, you could achieve 
+                            <strong>{{ result.best_month_yield }} bales/ha</strong> — that's 
+                            <strong class="text-success">{{ result.yield_improvement }} bales/ha more</strong> 
+                            ({{ result.yield_improvement_pct }}% increase) compared to your current conditions!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <strong>💡 Insight:</strong> Your current timing is already near optimal. 
+                Best results in {{ result.best_month_name }} ({{ result.best_month_yield }} bales/ha).
+            </div>
+            {% endif %}
+
+            <!-- Top 3 Best Months -->
+            <h5 class="mt-4 mb-3">🏆 Top 3 Planting Months</h5>
+            <div class="row">
+                {% for month in result.best_months %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 {% if loop.index == 1 %}border-success border-2{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                {% if loop.index == 1 %}
+                                    <span style="font-size: 2.5rem;">🥇</span>
+                                    <h6 class="text-success mt-1"><strong>BEST</strong></h6>
+                                {% elif loop.index == 2 %}
+                                    <span style="font-size: 2.5rem;">🥈</span>
+                                    <h6 class="text-secondary mt-1">2nd Best</h6>
+                                {% else %}
+                                    <span style="font-size: 2.5rem;">🥉</span>
+                                    <h6 class="text-secondary mt-1">3rd Best</h6>
+                                {% endif %}
+                            </div>
+                            <h4 class="mb-2">{{ month.month }}</h4>
+                            <h3 class="{% if loop.index == 1 %}text-success{% else %}text-secondary{% endif %} mb-1">
+                                {{ month.predicted_yield }}
+                            </h3>
+                            <p class="text-muted mb-2"><strong>bales/ha</strong></p>
+                            <span class="badge 
+                                {% if month.season == 'Long Rains' %}bg-primary
+                                {% elif month.season == 'Short Rains' %}bg-info
+                                {% else %}bg-warning text-dark{% endif %}">
+                                {{ month.season }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Monthly Comparison Table -->
+            <h5 class="mt-4 mb-3">📊 All Months Comparison</h5>
+
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Month</th>
+                            <th>Season</th>
+                            <th>Predicted Yield</th>
+                            <th>Visual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month_data in result.monthly_predictions %}
+                        <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
+                            <td>
+                                {% if loop.index == 1 %}🥇
+                                {% elif loop.index == 2 %}🥈
+                                {% elif loop.index == 3 %}🥉
+                                {% else %}{{ loop.index }}{% endif %}
+                            </td>
+                            <td><strong>{{ month_data.month }}</strong></td>
+                            <td>
+                                <span class="badge badge-sm 
+                                    {% if month_data.season == 'Long Rains' %}bg-primary
+                                    {% elif month_data.season == 'Short Rains' %}bg-info
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ month_data.season }}
+                                </span>
+                            </td>
+                            <td><strong>{{ month_data.predicted_yield }} bales/ha</strong></td>
+                            <td style="width: 40%;">
+                                {% set max_yield = result.monthly_predictions[0].predicted_yield %}
+                                {% set bar_width = (month_data.predicted_yield / max_yield * 100)|round %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if loop.index == 1 %}bg-success
+                                        {% elif loop.index <= 3 %}bg-info
+                                        {% else %}bg-secondary{% endif %}" 
+                                        style="width: {{ bar_width }}%;">
+                                        <small>{{ month_data.predicted_yield }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 3: RECOMMENDATIONS                                        -->
+    <!-- ================================================================= -->
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">3️⃣ Recommendations</h4>
+        </div>
+        <div class="card-body">
+            
+            <!-- Planting Recommendations -->
+            <h5 class="mb-3">🗓️ Planting Time Recommendations</h5>
+            {% for rec in result.planting_recommendations %}
+            <div class="alert alert-{{ rec.type }} d-flex align-items-center mb-2">
+                <span class="me-2" style="font-size: 1.5rem;">{{ rec.icon }}</span>
+                <div>{{ rec.text }}</div>
+            </div>
+            {% endfor %}
+
+            <!-- General Farming Recommendations -->
+            <h5 class="mt-4 mb-3">🌾 General Farming Recommendations</h5>
+            {% for rec in result.recommendations %}
+            <div class="alert alert-{{ rec.type }} d-flex align-items-center mb-2">
+                <span class="me-2" style="font-size: 1.5rem;">{{ rec.icon }}</span>
+                <div>{{ rec.text }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+   
+    
+
+    <!-- Action Buttons -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-2">
+            <a href="{{ url_for('geographic.predict_form') }}" class="btn btn-primary btn-lg w-100">
+                🔄 Analyze Another Location
+            </a>
+        </div>
+        <div class="col-md-6 mb-2">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg w-100">
+                🏠 Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.metric-box {
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.progress {
+    border-radius: 5px;
+}
+
+.alert {
+    border-radius: 8px;
+}
+
+.table-success {
+    background-color: #d1f4e0 !important;
+}
+
+.badge-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}

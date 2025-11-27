@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Optimal Planting Time - Cotton Prediction{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-section h4 {
+        color: #17a2b8;
+        border-bottom: 2px solid #17a2b8;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>📅 Optimal Planting Time Calculator</h2>
+        <p class="text-muted">Find the best month to plant cotton based on rainfall patterns</p>
+        <div class="alert alert-info">
+            <strong>ℹ️ How it works:</strong> This tool analyzes rainfall patterns to recommend 
+            the best planting window. Cotton needs 300-600mm of rain in the first 3 months after planting.
+        </div>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('geographic.optimal_planting') }}">
+    
+    <div class="form-section">
+        <h4>📍 Location Information</h4>
+        
+        <div class="mb-3">
+            <label class="form-label">Location/County *</label>
+            <input type="text" class="form-control" name="location" 
+                   placeholder="e.g., Busia County, Kenya" required>
+            <small class="text-muted">Enter your farm location for customized advice</small>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Annual Rainfall (mm) *</label>
+            <input type="number" step="1" class="form-control" name="annual_rain" 
+                   placeholder="e.g., 1300" required>
+            <small class="text-muted">Total yearly rainfall for your location</small>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">
+                Monthly Rainfall Data 
+                <span class="badge bg-secondary">Optional</span>
+            </label>
+            <input type="text" class="form-control" name="monthly_rainfall" 
+                   placeholder="e.g., 50,60,150,200,180,80,50,40,70,140,180,100">
+            <small class="text-muted">
+                If available, enter 12 comma-separated values (Jan-Dec) in mm. 
+                Otherwise, we'll estimate based on typical Kenya patterns.
+            </small>
+        </div>
+    </div>
+    
+    <div class="text-center">
+        <button type="submit" class="btn btn-info btn-lg">
+            📅 Calculate Best Planting Time
+        </button>
+    </div>
+</form>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>💡 Quick Guide</h5>
+        <ul>
+            <li><strong>Kenya:</strong> Two planting seasons - Long rains (March-April) and Short rains (October-November)</li>
+            <li><strong>Rainfall needed:</strong> 300-600mm in first 3 months after planting</li>
+            <li><strong>Temperature:</strong> Plant when soil temperature is 15-16°C</li>
+            <li><strong>Growth period:</strong> Cotton takes 150-180 days from planting to harvest</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

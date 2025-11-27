@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Cotton Advisor - Home{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="content-overlay"> 
+        <h1>Cotton Advisor System</h1>
+        <p class="tagline">Predict cotton planting times using advanced machine learning algorithms</p>
+        
+        <div class="cta-buttons">
+            <a href="{{ url_for('login') }}" class="btn-cta btn-primary">Login</a>
+            <a href="{{ url_for('signup') }}" class="btn-cta btn-secondary">Sign Up</a>
+        </div>
+
+        <div class="features-list"> 
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card feature">
+                    <h3>Accurate Predictions</h3>
+                    <p>ML-powered cotton planting time forecasting</p>
+                </div>
+                <div class="feature-card feature">
+                    <h3>Easy to Use</h3>
+                    <p>Simple interface for farmers and agricultural experts</p>
+                </div>
+                <div class="feature-card feature">
+                    <h3>Data-Driven</h3>
+                    <p>Based on comprehensive agricultural data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

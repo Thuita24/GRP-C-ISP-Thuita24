@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Cotton Yield Prediction{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"> Cotton Yield Prediction</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Get AI-powered yield predictions for your cotton farm based on climate conditions and historical data.
+                    </p>
+
+                    <form id="predictionForm" method="POST" action="{{ url_for('prediction.predict_yield') }}">
+                        <!-- State Selection -->
+                        <div class="mb-3">
+                            <label for="state" class="form-label">State *</label>
+                            <select class="form-select" id="state" name="state" required>
+                                <option value="">Select State</option>
+                                {% for state in states %}
+                                <option value="{{ state.name }}">{{ state.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- District Selection -->
+                        <div class="mb-3">
+                            <label for="district" class="form-label">District *</label>
+                            <select class="form-select" id="district" name="district" required disabled>
+                                <option value="">Select State First</option>
+                            </select>
+                        </div>
+
+                        <!-- Season Selection -->
+                        <div class="mb-3">
+                            <label for="season" class="form-label">Season *</label>
+                            <select class="form-select" id="season" name="season" required>
+                                <option value="">Select Season</option>
+                                {% for season in seasons %}
+                                <option value="{{ season }}">{{ season }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">
+                                Kharif: June-October (Monsoon) | Rabi: October-March (Winter)
+                            </small>
+                        </div>
+
+                        <!-- Year Selection -->
+                        <div class="mb-3">
+                            <label for="year" class="form-label">Year *</label>
+                            <select class="form-select" id="year" name="year" required>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+
+                        <!-- Loading Spinner -->
+                        <div id="loadingSpinner" class="text-center d-none mb-3">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Analyzing climate data and making prediction...</p>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                                 Generate Full Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5> How It Works</h5>
+                    <ul>
+                        <li>Our AI model analyzes historical yield and climate data from <strong>6,582</strong> records</li>
+                        <li>Covers <strong>28 states</strong> and <strong>455 districts</strong> across India</li>
+                        <li>Uses real-time weather forecasts and historical patterns</li>
+                        <li>Model accuracy: R² = 0.47, RMSE = 0.95 bales/ha</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cascading dropdown: Load districts when state is selected
+document.getElementById('state').addEventListener('change', function() {
+    const state = this.value;
+    const districtSelect = document.getElementById('district');
+    
+    if (!state) {
+        districtSelect.disabled = true;
+        districtSelect.innerHTML = '<option value="">Select State First</option>';
+        return;
+    }
+    
+    // Fetch districts for selected state
+    fetch(`{{ url_for('prediction.get_districts', state='STATE') }}`.replace('STATE', encodeURIComponent(state)))
+        .then(response => response.json())
+        .then(data => {
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            data.districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                districtSelect.appendChild(option);
+            });
+            districtSelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error loading districts:', error);
+            districtSelect.innerHTML = '<option value="">Error loading districts</option>';
+        });
+});
+
+// Form submission with loading state
+document.getElementById('predictionForm').addEventListener('submit', function(e) {
+    // Show loading spinner
+    document.getElementById('loadingSpinner').classList.remove('d-none');
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('errorAlert').classList.add('d-none');
+});
+</script>
+{% endblock %}

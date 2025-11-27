@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Success Header -->
+            <div class="alert alert-success text-center">
+                <h2 class="mb-0"> Prediction Complete!</h2>
+            </div>
+
+            <!-- Main Prediction Card -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"> </h3> Cotton Yield Prediction</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Location Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">State</p>
+                            <h5>{{ prediction.input_data.state }}</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">District</p>
+                            <h5>{{ prediction.input_data.district }}</h5>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="mb-1 text-muted">Season</p>
+                            <h5>{{ prediction.input_data.season }}</h5>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="mb-1 text-muted">Year</p>
+                            <h5>{{ prediction.input_data.year }}</h5>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Predicted Yield -->
+                    <div class="text-center mb-4">
+                        <h2 class="text-muted mb-2">Predicted Yield</h2>
+                        <h1 class="display-1 text-success">
+                            {{ prediction.predicted_yield }}
+                        </h1>
+                        <h3 class="text-muted">bales per hectare</h3>
+                    </div>
+
+                    <!-- Confidence Interval -->
+                    <div class="alert alert-info text-center">
+                        <strong>95% Confidence Interval:</strong>
+                        {{ prediction.confidence_interval.lower }} - {{ prediction.confidence_interval.upper }} bales/ha
+                    </div>
+
+                    <hr>
+
+                    <!-- Climate Conditions Used -->
+                    <h5 class="mb-3"> Climate Conditions</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Temperature</h6>
+                                    <h4>{{ prediction.input_data.climate.temperature }}°C</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Total Rainfall</h6>
+                                    <h4>{{ prediction.input_data.climate.rainfall_total }} mm</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Solar Radiation</h6>
+                                    <h4>{{ prediction.input_data.climate.solar_radiation }} MJ/m²</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Dewpoint</h6>
+                                    <h4>{{ prediction.input_data.climate.dewpoint }}°C</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted">Previous Year Yield</h6>
+                                    <h4>{{ prediction.input_data.previous_year_yield }} bales/ha</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4">
+
+                    <!-- Data Source Info -->
+                    <p class="text-muted small">
+                        <strong>Climate Data Source:</strong> {{ prediction.input_data.climate.source }}<br>
+                        <strong>Model Version:</strong> {{ prediction.metadata.model_version }}<br>
+                        <strong>Prediction Date:</strong> {{ prediction.metadata.prediction_date }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="{{ url_for('prediction.predict_form') }}" class="btn btn-success btn-lg w-100">
+                         New Prediction
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('prediction.optimal_planting_form') }}" class="btn btn-primary btn-lg w-100">
+                         Find Planting Time
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg w-100">
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

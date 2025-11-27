@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Database - DO NOT COMMIT USER DATA
+*.db
+*.db-journal
+cotton_app.db
+
+# Large CSV files - already imported to database
+data/*.csv
+data/merged_dataset.csv
+data/merged_dataset_fixed.csv
+data/*_backup.csv
+
+# Keep JSON files
+!data/*.json
+
+# Environment
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+.env

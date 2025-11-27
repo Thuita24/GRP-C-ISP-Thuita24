@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Geographic Yield Prediction - Cotton Prediction{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/geographic_style.css') }}">
+<style>
+    .feature-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 10px;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-section h4 {
+        color: #28a745;
+        border-bottom: 2px solid #28a745;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .tooltip-icon {
+        cursor: help;
+        color: #17a2b8;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+    .predict-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        transition: transform 0.2s;
+    }
+    .predict-btn:hover {
+        transform: scale(1.05);
+    }
+    .badge-kenya {
+        background: linear-gradient(135deg, #000000, #006600, #ff0000);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+    }
+    .example-select {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        border: 2px solid #4caf50;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2> Geographic Yield Prediction <span class="badge badge-kenya">🇰🇪 Kenya</span></h2>
+        <p class="text-muted">Advanced AI model using geographic characteristics</p>
+        <div class="alert alert-info">
+            <strong>ℹ️ How it works:</strong> 
+            This model predicts yield based on <strong>climate, rainfall, soil, and irrigation</strong> - 
+            
+        </div>
+    </div>
+</div>
+
+{% if example_name %}
+<div class="alert alert-success">
+    ✓ Loaded example: <strong>{{ example_name }}</strong>
+</div>
+{% endif %}
+
+{% if errors %}
+<div class="alert alert-danger">
+    <strong>⚠️ Please fix the following:</strong>
+    <ul class="mb-0">
+        {% for error in errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- QUICK START EXAMPLES DROPDOWN -->
+<div class="example-select">
+    <h5> Quick Start: Select a Cotton-Growing Region</h5>
+    <p class="text-muted mb-3">Choose a region to auto-fill the form with typical values. You can modify any value before predicting.</p>
+    
+    <div class="row align-items-end">
+        <div class="col-md-8">
+            <label class="form-label"><strong>Select Region:</strong></label>
+            <select class="form-select form-select-lg" id="regionSelect" onchange="loadRegion(this.value)">
+                <option value="">-- Choose a region to get started --</option>
+                
+                <optgroup label="🇰🇪 KENYA - Western Region">
+                    <option value="kenya_busia">Busia County 🌳 Humid</option>
+                    <option value="kenya_bungoma">Bungoma County 🌳 Humid</option>
+                    <option value="kenya_kakamega">Kakamega County 🌳 Humid</option>
+                </optgroup>
+                
+                <optgroup label="🇰🇪 KENYA - Nyanza Region">
+                    <option value="kenya_homabay">Homa Bay County 🌱 Sub-humid</option>
+                    <option value="kenya_migori">Migori County 🌱 Sub-humid</option>
+                    <option value="kenya_siaya">Siaya County 🌱 Sub-humid</option>
+                </optgroup>
+                
+                <optgroup label="🇰🇪 KENYA - Eastern Region">
+                    <option value="kenya_machakos">Machakos County 🌾 Semi-arid</option>
+                    <option value="kenya_makueni">Makueni County 🌾 Semi-arid</option>
+                    <option value="kenya_kitui">Kitui County 🏜️ Arid</option>
+                </optgroup>
+                
+                <optgroup label="🇰🇪 KENYA - Rift Valley Region">
+                    <option value="kenya_baringo">Baringo County 🌾 Semi-arid</option>
+                    <option value="kenya_westpokot">West Pokot County 🌾 Semi-arid</option>
+                </optgroup>
+                
+                <optgroup label="🇰🇪 KENYA - Coast Region">
+                    <option value="kenya_kwale">Kwale County 🌱 Sub-humid</option>
+                    <option value="kenya_kilifi">Kilifi County 🌱 Sub-humid</option>
+                </optgroup>
+ 
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-success mb-0">
+                <small>
+                    <strong>💡 Tip:</strong> Start with a region similar to yours, then adjust values based on local knowledge.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PREDICTION FORM -->
+<form method="POST" action="{{ url_for('geographic.predict') }}">
+    <!-- LOCATION INFO -->
+     <input type="hidden" name="location" id="locationName" value="{{ form_data.name if form_data else 'Unknown Location' }}">
+    
+    <!-- CLIMATE VARIABLES -->
+    <div class="form-section">
+        <h4> Climate Variables</h4>
+        <p class="text-muted">Average values during the growing season</p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Temperature (°C) *
+                    <span class="tooltip-icon" title="Average temperature. Cotton thrives at 25-30°C. Range: 20-35°C">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="temp_c" 
+                       value="{{ form_data.temp_c if form_data else '' }}" 
+                       placeholder="e.g., 28" required>
+                <small class="text-muted">Typical range: 20-35°C</small>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Dewpoint (°C) *
+                    <span class="tooltip-icon" title="Indicates humidity. Usually 5-10°C below air temperature">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="dewpoint_c" 
+                       value="{{ form_data.dewpoint_c if form_data else '' }}"
+                       placeholder="e.g., 20" required>
+                <small class="text-muted">Typical range: 10-25°C</small>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Precipitation (mm/month) *
+                    <span class="tooltip-icon" title="Average monthly precipitation. Use weather station data">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="precip_mm" 
+                       value="{{ form_data.precip_mm if form_data else '' }}"
+                       placeholder="e.g., 85" required>
+                <small class="text-muted">Typical range: 20-200mm/month</small>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Solar Radiation (MJ/m²) *
+                    <span class="tooltip-icon" title="Daily solar radiation. Use NASA POWER data. Range: 10-25">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="solar_rad" 
+                       value="{{ form_data.solar_rad if form_data else '' }}"
+                       placeholder="e.g., 18" required>
+                <small class="text-muted">Typical range: 15-25 MJ/m²</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RAINFALL CHARACTERISTICS -->
+    <div class="form-section">
+        <h4> Rainfall Characteristics</h4>
+        <p class="text-muted">Long-term rainfall patterns </p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Annual Rainfall (mm) *
+                    <span class="tooltip-icon" title="Total yearly rainfall. Kenya: 500-2000mm typical. Use CHIRPS data">ℹ️</span>
+                </label>
+                <input type="number" step="1" class="form-control" name="annual_rain" 
+                       value="{{ form_data.annual_rain if form_data else '' }}"
+                       placeholder="e.g., 1200" required
+                       oninput="updateRainfallZone(this.value)">
+                <small class="text-muted">Typical range: 400-2000mm/year</small>
+                <div class="mt-2">
+                    <span id="rainfall-zone" class="fw-bold"></span>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Rainfall Variability (CV %)
+                    <span class="badge bg-secondary">Optional</span>
+                    <span class="tooltip-icon" title="10-15% = stable, 15-25% = moderate, >25% = highly variable. Default: 20%">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="rain_cv" 
+                       value="{{ form_data.rain_cv if form_data else '' }}"
+                       placeholder="20 (default)">
+                <small class="text-muted">Lower = more consistent. Typical: 15-35%</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SOIL & IRRIGATION -->
+    <div class="form-section">
+        <h4>🌱 Soil & Irrigation</h4>
+        <p class="text-muted">Soil characteristics and irrigation infrastructure</p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Soil Type *
+                    <span class="tooltip-icon" title="Black = best for cotton. Red = good with pH management. Alluvial = fertile">ℹ️</span>
+                </label>
+                <select class="form-select" name="soil_type" required>
+                    <option value="">-- Select soil type --</option>
+                    {% for soil in soil_types %}
+                    <option value="{{ soil }}" {% if form_data and form_data.soil_type == soil %}selected{% endif %}>
+                        {{ soil }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="text-muted">
+                    <strong>Kenya:</strong> Red lateritic soils common in Western; Black cotton soils in Rift Valley
+                </small>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Irrigation Coverage (%) *
+                    <span class="tooltip-icon" title="0% = rainfed, 30-50% = supplemental, 70-100% = fully irrigated">ℹ️</span>
+                </label>
+                <input type="range" class="form-range" name="irrigation" 
+                       min="0" max="100" step="5"
+                       value="{{ form_data.irrigation if form_data else '30' }}" 
+                       oninput="document.getElementById('irrigation-value').textContent = this.value + '%'">
+                <div class="text-center mt-2">
+                    <strong><span id="irrigation-value">{{ form_data.irrigation if form_data else '30' }}%</span></strong>
+                </div>
+                <small class="text-muted">Rainfed: 0-20% | Supplemental: 20-50% | Full: 50-85%</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- HISTORICAL DATA -->
+    <div class="form-section">
+        <h4> Historical Data</h4>
+        <p class="text-muted">Optional: Improves prediction accuracy</p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Previous Year Yield (bales/ha)
+                    <span class="badge bg-secondary">Optional</span>
+                    <span class="tooltip-icon" title="Last season's yield. Default: 1.5 bales/ha">ℹ️</span>
+                </label>
+                <input type="number" step="0.1" class="form-control" name="prev_yield" 
+                       value="{{ form_data.prev_yield if form_data else '' }}"
+                       placeholder="1.5 (default)">
+                <small class="text-muted">
+                    <strong>Kenya avg:</strong> 1.5-2.0 bales/ha | <strong>
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SUBMIT BUTTON -->
+    <div class="text-center mb-4">
+        <button type="submit" class="btn btn-success predict-btn">
+             GENERATE FULL REPORT
+        </button>
+    </div>
+</form>
+
+<!-- INFO CARDS -->
+<div class="row">
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5> Kenya Cotton Zones</h5>
+                <ul class="mb-0">
+                    <li><strong> Humid (1200-1800mm):</strong> Western Kenya </li>
+                    <li><strong> Sub-humid (800-1200mm):</strong> Nyanza, Coast</li>
+                    <li><strong> Semi-arid (500-900mm):</strong> Eastern, Rift Valley</li>
+                    <li><strong> Arid (<500mm):</strong> Requires irrigation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+function loadRegion(regionName) {
+    if (regionName) {
+        // Get the selected option's display text
+        const selectElement = document.getElementById('regionSelect');
+        const selectedText = selectElement.options[selectElement.selectedIndex].text;
+        
+        // Remove emojis and extra spaces, keep just the location name
+        const cleanLocation = selectedText.replace(/🌳|🌱|🌾|🏜️|🇰🇪|🇮🇳|🌍|📊/g, '').trim();
+        
+        // Store in sessionStorage to preserve across page reload
+        sessionStorage.setItem('selectedLocation', cleanLocation);
+        
+        window.location.href = "{{ url_for('geographic.load_example', example_name='') }}" + regionName;
+    }
+}
+
+function updateRainfallZone(rainfall) {
+    const zone = document.getElementById('rainfall-zone');
+    if (!zone) return;
+    
+    const value = parseFloat(rainfall);
+    
+    if (isNaN(value)) {
+        zone.textContent = '';
+        return;
+    }
+    
+    if (value < 500) {
+        zone.textContent = '🏜️ Arid Zone';
+        zone.className = 'text-danger fw-bold';
+    } else if (value < 800) {
+        zone.textContent = '🌾 Semi-arid Zone';
+        zone.className = 'text-warning fw-bold';
+    } else if (value < 1200) {
+        zone.textContent = '🌱 Sub-humid Zone';
+        zone.className = 'text-info fw-bold';
+    } else {
+        zone.textContent = '🌳 Humid Zone';
+        zone.className = 'text-success fw-bold';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Restore location from sessionStorage
+    const storedLocation = sessionStorage.getItem('selectedLocation');
+    if (storedLocation) {
+        document.getElementById('locationName').value = storedLocation;
+    }
+    
+    // Clear sessionStorage after use
+    sessionStorage.removeItem('selectedLocation');
+    
+    // Initialize rainfall zone display
+    const annualRain = document.querySelector('input[name="annual_rain"]');
+    if (annualRain && annualRain.value) {
+        updateRainfallZone(annualRain.value);
+    }
+    
+    // Initialize irrigation slider display
+    const irrigation = document.querySelector('input[name="irrigation"]');
+    if (irrigation) {
+        document.getElementById('irrigation-value').textContent = irrigation.value + '%';
+    }
+});
+</script>
+
+{% endblock %}

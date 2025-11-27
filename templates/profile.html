@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Cotton Prediction{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" 
+                            style="width: 80px; height: 80px;">
+                        <span class="text-white fs-2">{{ user.name[0].upper() if user and user.name else 'U' }}</span>
+                    </div>
+                </div>
+                <h4>{{ user.name if user else 'User Name' }}</h4>
+                <p class="text-muted">{{ user.email if user else 'user@example.com' }}</p>
+                <p>
+                    {% if user.is_google_user %}
+                        <span class="badge bg-info">Google Account</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Email & Password</span>
+                    {% endif %}
+                    {% if user.mfa_enabled %}
+                        <span class="badge bg-success">🔐 MFA Enabled</span>
+                    {% else %}
+                        <span class="badge bg-warning">MFA Disabled</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6>Account Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Predictions:</span>
+                    <strong>{{ user_stats.total_predictions or 0 }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Member Since:</span>
+                    <strong>{{ user.created_date.strftime('%B %Y') if user and user.created_date else 'Recently' }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Last Login:</span>
+                    <strong>{{ user.last_login.strftime('%d/%m/%Y') if user and user.last_login else 'Today' }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Edit Profile</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('profile') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                        value="{{ user.name if user else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                        value="{{ user.email if user else '' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                value="{{ user.phone if user else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">About/Bio (Optional)</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3" 
+                                    placeholder="Tell us about your farming experience...">{{ user.bio if user else '' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Update Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>🔐 Two-Factor Authentication (2FA)</h5>
+            </div>
+            <div class="card-body">
+                {% if user.mfa_enabled %}
+                    <div class="alert alert-success">
+                        <strong>✓ MFA is enabled</strong> - Your account is protected with two-factor authentication.
+                    </div>
+                    <p>Your account is secured with an authenticator app. To disable MFA:</p>
+                    <form method="POST" action="{{ url_for('disable_mfa') }}">
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Enter your password to disable MFA</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure? This will disable MFA on your account.')">
+                            Disable MFA
+                        </button>
+                    </form>
+                {% else %}
+                    <p class="text-muted">Two-factor authentication adds an extra layer of security to your account.</p>
+                    <p>When MFA is enabled, you'll need to enter a code from your authenticator app each time you log in.</p>
+                    <a href="{{ url_for('setup_mfa') }}" class="btn btn-success">
+                        Enable Two-Factor Authentication
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not user.is_google_user %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Change Password</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('change_password') }}">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" 
+                                name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" 
+                                name="new_password" minlength="6" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_new_password" 
+                                name="confirm_new_password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">Change Password</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mt-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5>Danger Zone</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                <p><strong>All your predictions and data will be permanently lost.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('delete_account') }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Password confirmation validation
+    document.getElementById('confirm_new_password').addEventListener('input', function() {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = this.value;
+        
+        if (newPassword !== confirmPassword) {
+            this.setCustomValidity('Passwords do not match');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+</script>
+{% endblock %}

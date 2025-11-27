@@ -1,0 +1,149 @@
+<!-- templates/setup_mfa_new_user.html -->
+{% extends "base.html" %}
+
+{% block title %}Complete Your Account Setup - Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="text-center mb-0"> Complete Your Account Setup</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead mb-4">Welcome! To secure your account, we need to set up Two-Factor Authentication.</p>
+                
+                <div class="alert alert-info">
+                    <strong>Why MFA?</strong> Two-Factor Authentication adds an extra layer of security to your cotton prediction data and account.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Step 1: Download an Authenticator App</h5>
+                        <p>Choose any of these apps:</p>
+                        <ul>
+                            <li><strong>Google Authenticator</strong> (iPhone/Android)</li>
+                            <li><strong>Microsoft Authenticator</strong> (iPhone/Android)</li>
+                            <li><strong>Authy</strong> (iPhone/Android)</li>
+                            <li><strong>FreeOTP</strong> (iPhone/Android)</li>
+                        </ul>
+                        
+                        <h5 class="mt-4">Step 2: Scan QR Code</h5>
+                        <p>Open your authenticator app and scan the QR code to the right.</p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>Your QR Code</h5>
+                                <img src="{{ qr_code }}" alt="QR Code" style="width: 300px; height: 300px;" class="mt-3">
+                                <p class="mt-3 text-muted small">Scan this with your authenticator app</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5>Step 3: Enter Verification Code</h5>
+                        <p>After scanning, your authenticator app will generate a 6-digit code. Enter it below to complete setup:</p>
+                        
+                        <form method="POST" action="{{ url_for('verify_mfa_new_user') }}">
+                            <div class="mb-3">
+                                <label for="token" class="form-label">6-Digit Authentication Code</label>
+                                <input type="text" class="form-control form-control-lg text-center" id="token" name="token" 
+                                       pattern="[0-9]{6}" maxlength="6" placeholder="000000" required autofocus
+                                       style="font-size: 2rem; font-weight: bold; letter-spacing: 0.5rem;">
+                                <small class="text-muted">Enter the code from your authenticator app</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg w-100">✓ Verify & Complete Setup</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h5> Backup Codes - VERY IMPORTANT!</h5>
+                        <p class="text-danger"><strong>Save these backup codes in a safe place.</strong> If you lose access to your authenticator app, you can use these codes to log in.</p>
+                        
+                        <div class="bg-light p-4 rounded border border-warning">
+                            <div class="row">
+                                {% for code in backup_codes %}
+                                    <div class="col-md-6 mb-2">
+                                        <code class="user-select-all" style="font-size: 1.1rem; font-weight: bold;">{{ code }}</code>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="copyBackupCodes()">
+                                 Copy All Codes
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="downloadBackupCodes()">
+                                 Download Codes
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmBackup" required>
+                                <label class="form-check-label" for="confirmBackup">
+                                    <strong>I have saved my backup codes in a safe place</strong>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-4">
+                    <strong> Note:</strong> You must enter a valid 6-digit code to complete your account setup. After verification, you'll be able to access the Cotton Prediction Dashboard.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Prevent form submission until backup codes are confirmed
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (!document.getElementById('confirmBackup').checked) {
+            e.preventDefault();
+            alert('Please confirm that you have saved your backup codes.');
+        }
+    });
+    
+    function copyBackupCodes() {
+        const codes = "{{ backup_codes|join('\n') }}";
+        navigator.clipboard.writeText(codes).then(() => {
+            alert('✓ Backup codes copied to clipboard!');
+        });
+    }
+    
+    function downloadBackupCodes() {
+        const codes = "{{ backup_codes|join('\n') }}";
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(codes));
+        element.setAttribute('download', 'cotton-prediction-backup-codes.txt');
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+    
+    // Auto-format input to add spaces between digits
+    document.getElementById('token').addEventListener('input', function(e) {
+        if (this.value.length === 6) {
+            // Automatically submit when 6 digits are entered
+            // Optional: uncomment to auto-submit
+            // this.form.submit();
+        }
+    });
+</script>
+{% endblock %}

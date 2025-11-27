@@ -1,0 +1,42 @@
+<!-- templates/verify_mfa.html -->
+{% extends "base.html" %}
+
+{% block title %}Verify Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">🔐 Verify Identity</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Enter your 6-digit authentication code or a backup code to continue.</p>
+                
+                <form method="POST" action="{{ url_for('verify_mfa') }}">
+                    <div class="mb-3">
+                        <label for="token" class="form-label">Authentication Code (6 digits)</label>
+                        <input type="text" class="form-control" id="token" name="token" 
+                               pattern="[0-9]{6}" maxlength="6" placeholder="000000" 
+                               autocomplete="off" autofocus>
+                        <small class="text-muted">Enter the code from your authenticator app</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">OR</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="backup_code" class="form-label">Backup Code</label>
+                        <input type="text" class="form-control" id="backup_code" name="backup_code" 
+                               placeholder="ABC12345" autocomplete="off">
+                        <small class="text-muted">Enter one of your backup codes if you don't have access to your authenticator</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">Verify</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

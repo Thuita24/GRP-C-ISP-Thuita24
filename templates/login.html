@@ -1,0 +1,63 @@
+<!-- templates/login.html - Updated with Google Sign-In -->
+{% extends "base.html" %}
+
+{% block title %}Login - Cotton Prediction{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Login</h3>
+            </div>
+            <div class="card-body">
+                <!-- Google Sign-In Button -->
+                <div class="mb-4">
+                    <a href="{{ url_for('auth_google') }}" class="btn btn-outline-primary w-100">
+                        <img src="https://www.gstatic.com/firebaseapp/v8.10.0/images/firebaseui-icon-16.png" 
+                             alt="Google" style="width: 20px; margin-right: 8px;">
+                        Sign in with Google
+                    </a>
+                </div>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <hr class="flex-grow-1">
+                    <span class="mx-2 text-muted">OR</span>
+                    <hr class="flex-grow-1">
+                </div>
+                
+                <!-- Email/Password Form -->
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ request.form.email or '' }}" required autofocus>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">
+                            Remember me
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">Login</button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <p><a href="#" class="text-muted">Forgot your password?</a></p>
+                    <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Platform Library -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endblock %}
